@@ -1,0 +1,6 @@
+{
+  "name": "YojanaSetu AI - Government Scheme & Missed-Benefit Detector",
+  "description": "AI-powered government welfare scheme eligibility analyzer, missed-benefit detector, personalized gap audit, and application navigator for citizens and families.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
