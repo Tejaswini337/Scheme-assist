@@ -136,20 +136,57 @@ export default function App() {
     go("home");
   };
 
-  const handleRegister = (e: import("react").FormEvent) => {
-    e.preventDefault();
-    if (!registerName || !registerEmail || !registerPassword) {
-      alert("Please fill all required fields.");
-      return;
-    }
-    if (registerPassword !== registerConfirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
-    setLoggedInUser(registerName);
-    go("home");
-  };
+  const handleRegister = async (e: import("react").FormEvent) => {
+  e.preventDefault();
 
+  if (!registerName || !registerEmail || !registerPassword) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  if (registerPassword !== registerConfirmPassword) {
+    alert("Passwords do not match.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: registerName,
+        email: registerEmail,
+        password: registerPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Registration failed.");
+      return;
+    }
+
+    alert("Registration successful!");
+
+    setLoggedInUser(registerName);
+
+    // Clear registration fields
+    setRegisterName("");
+    setRegisterEmail("");
+    setRegisterPassword("");
+    setRegisterConfirmPassword("");
+
+    // Go to dashboard
+    go("home");
+
+  } catch (error) {
+    console.error("Registration error:", error);
+    alert("Unable to connect to the backend. Please make sure Flask server is running.");
+  }
+};
   const handleLogout = () => {
     setLoggedInUser("Citizen");
     setFormData(initialForm);
