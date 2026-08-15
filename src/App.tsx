@@ -194,67 +194,7 @@ export default function App() {
     { title: "Family & Social Details", sub: "Category, Family Size", complete: !!(formData.category && formData.familySize) },
     { title: "Financial & Occupation", sub: "Income, Occupation", complete: !!(formData.annualIncome && formData.occupation) },
     { title: "Documents", sub: "Aadhaar, Caste, Income Proof", complete: !!(formData.aadhaarAvailable && formData.casteCertificate && formData.incomeCertificate) },
-  ];
-
-  const Sidebar = () => (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-[#ded8cc] bg-[#fbfaf6] min-h-[calc(100vh-73px)]">
-      <div className="p-5 space-y-1">
-        <SideButton icon="⌂" label="Dashboard" active={appStage === "home"} onClick={() => go("home")} />
-        <SideButton icon="♙" label="Eligibility Profile" active={appStage === "eligibility"} onClick={() => go("eligibility")} />
-        <SideButton icon="▣" label="My Schemes" active={appStage === "schemes"} onClick={() => go("schemes")} />
-        <SideButton icon="◇" label="Missed Benefits" active={false} onClick={() => go("results")} />
-        <SideButton icon="▤" label="Applications" active={false} onClick={() => go("guidance")} />
-        <SideButton icon="□" label="Document Checker" active={false} onClick={() => go("eligibility")} />
-        <SideButton icon="✦" label="AI Assistant" active={false} onClick={() => alert("AI Assistant can be connected to Gemini/API in the backend phase.")} />
-        <SideButton icon="⚙" label="Settings" active={false} onClick={() => alert("Settings section coming next.")} />
-        <SideButton icon="?" label="Help & Support" active={false} onClick={() => alert("Help & Support")} />
-      </div>
-
-      <div className="mt-auto p-5">
-        <div className="rounded-2xl border border-[#dfe6db] bg-[#eef4eb] p-4">
-          <p className="font-bold text-[#304936]">Need Help?</p>
-          <p className="mt-1 text-xs leading-5 text-[#6e776e]">Our Scheme Assist guide is here to help.</p>
-          <button
-            onClick={() => go("guidance")}
-            className="mt-3 w-full rounded-xl bg-[#55745c] py-2.5 text-sm font-bold text-white hover:bg-[#48654f]"
-          >
-            Ask Scheme Assistant
-          </button>
-        </div>
-      </div>
-    </aside>
-  );
-
-  const TopNav = () => (
-    <header className="sticky top-0 z-40 border-b border-[#ded8cc] bg-[#fbfaf6]/95 backdrop-blur">
-      <div className="flex h-[73px] items-center justify-between px-5 lg:px-8">
-        <button onClick={() => go("home")} className="flex items-center gap-3 text-left">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-[#82917f] bg-[#edf1e9] text-2xl">⚖</div>
-          <div>
-            <div className="text-xl font-extrabold tracking-tight text-[#26352b]">Scheme Assist</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-[#7c847b]">Government Scheme Assistant</div>
-          </div>
-        </button>
-
-        <nav className="hidden xl:flex items-center gap-8">
-          <button onClick={() => go("home")} className="font-semibold text-[#405343] hover:text-[#55745c]">Home</button>
-          <button onClick={() => go("eligibility")} className="font-semibold text-[#405343] hover:text-[#55745c]">Eligibility Check</button>
-          <button onClick={() => go("schemes")} className="font-semibold text-[#405343] hover:text-[#55745c]">Schemes</button>
-          <button onClick={() => go("guidance")} className="font-semibold text-[#405343] hover:text-[#55745c]">AI Advisor</button>
-          <button onClick={() => go("guidance")} className="font-semibold text-[#405343] hover:text-[#55745c]">My Applications</button>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:block text-right">
-            <p className="text-sm font-bold text-[#303b33]">{loggedInUser}</p>
-            <p className="text-xs text-[#7d847d]">Citizen</p>
-          </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5ebe1] text-xl">♙</div>
-          <button onClick={handleLogout} className="hidden sm:block rounded-xl border border-[#cfd5cb] px-3 py-2 text-sm font-semibold text-[#526254] hover:bg-[#eef2eb]">Logout</button>
-        </div>
-      </div>
-    </header>
-  );
+  ]; 
 
   if (appStage === "landing") {
     return (
@@ -313,22 +253,19 @@ export default function App() {
     );
   }
 
-  const DashboardShell = ({ children }: { children: ReactNode }) => (
-    <div className="min-h-screen bg-[#f5f6f2] text-[#30352f]">
-      <TopNav />
-      <div className="flex">
-        <Sidebar />
-        <main className="min-w-0 flex-1">{children}</main>
-      </div>
-    </div>
-  );
+ 
 
   if (appStage === "home") {
     const eligibleCount = matchedSchemes.length || 12;
     const missedCount = Math.max(2, 19 - eligibleCount);
 
     return (
-      <DashboardShell>
+      <DashboardShell
+  go={go}
+  loggedInUser={loggedInUser}
+  onLogout={handleLogout}
+  appStage={appStage}
+>
         <div className="mx-auto max-w-[1500px] px-5 py-8 lg:px-10">
           <div className="mb-7">
             <p className="text-sm font-medium text-[#758077]">Citizen Dashboard</p>
@@ -406,7 +343,12 @@ export default function App() {
 
   if (appStage === "schemes") {
     return (
-      <DashboardShell>
+      <DashboardShell
+  go={go}
+  loggedInUser={loggedInUser}
+  onLogout={handleLogout}
+  appStage={appStage}
+>
         <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Scheme Directory</p>
           <h1 className="mt-2 text-3xl font-extrabold">Government Schemes</h1>
@@ -429,7 +371,12 @@ export default function App() {
 
   if (appStage === "eligibility") {
     return (
-      <DashboardShell>
+      <DashboardShell
+  go={go}
+  loggedInUser={loggedInUser}
+  onLogout={handleLogout}
+  appStage={appStage}
+>
         <div className="mx-auto max-w-6xl px-5 py-8 lg:px-10">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Eligibility Profile</p>
           <h1 className="mt-2 text-3xl font-extrabold">Tell us about yourself</h1>
@@ -496,7 +443,12 @@ export default function App() {
   if (appStage === "results") {
     const missed = schemes.filter((s) => !matchedSchemes.some((m) => m.name === s.name)).slice(0, 5);
     return (
-      <DashboardShell>
+      <DashboardShell
+  go={go}
+  loggedInUser={loggedInUser}
+  onLogout={handleLogout}
+  appStage={appStage}
+>
         <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
           <div className="rounded-3xl border border-[#dfe3dc] bg-white p-7">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Eligibility Results</p>
@@ -561,7 +513,12 @@ export default function App() {
 
   if (appStage === "guidance") {
     return (
-      <DashboardShell>
+      <DashboardShell
+  go={go}
+  loggedInUser={loggedInUser}
+  onLogout={handleLogout}
+  appStage={appStage}
+>
         <div className="mx-auto max-w-5xl px-5 py-8 lg:px-10">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Application Guidance</p>
           <h1 className="mt-2 text-3xl font-extrabold">How to proceed with a government scheme</h1>
@@ -589,6 +546,252 @@ export default function App() {
   return null;
 }
 
+  function Sidebar({
+  go,
+  appStage,
+}: {
+  go: (stage: AppStage) => void;
+  appStage: AppStage;
+}) {
+  return (
+    <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-[#ded8cc] bg-[#fbfaf6] min-h-[calc(100vh-73px)]">
+
+      <div className="p-5 space-y-1">
+
+        <SideButton
+          icon="⌂"
+          label="Dashboard"
+          active={appStage === "home"}
+          onClick={() => go("home")}
+        />
+
+        <SideButton
+          icon="♙"
+          label="Eligibility Profile"
+          active={appStage === "eligibility"}
+          onClick={() => go("eligibility")}
+        />
+
+        <SideButton
+          icon="▣"
+          label="My Schemes"
+          active={appStage === "schemes"}
+          onClick={() => go("schemes")}
+        />
+
+        <SideButton
+          icon="◇"
+          label="Missed Benefits"
+          active={appStage === "results"}
+          onClick={() => go("results")}
+        />
+
+        <SideButton
+          icon="▤"
+          label="Applications"
+          active={appStage === "guidance"}
+          onClick={() => go("guidance")}
+        />
+
+        <SideButton
+          icon="□"
+          label="Document Checker"
+          active={false}
+          onClick={() => go("eligibility")}
+        />
+
+        <SideButton
+          icon="✦"
+          label="AI Assistant"
+          active={false}
+          onClick={() => go("guidance")}
+        />
+
+        <SideButton
+          icon="⚙"
+          label="Settings"
+          active={false}
+          onClick={() => alert("Settings section coming soon")}
+        />
+
+        <SideButton
+          icon="?"
+          label="Help & Support"
+          active={false}
+          onClick={() => alert("Help & Support")}
+        />
+
+      </div>
+
+      <div className="mt-auto p-5">
+        <div className="rounded-2xl border border-[#dfe6db] bg-[#eef4eb] p-4">
+
+          <p className="font-bold text-[#304936]">
+            Need Help?
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-[#6e776e]">
+            Our Scheme Assist guide is here to help.
+          </p>
+
+          <button
+            onClick={() => go("guidance")}
+            className="mt-3 w-full rounded-xl bg-[#55745c] py-2.5 text-sm font-bold text-white"
+          >
+            Ask Scheme Assistant
+          </button>
+
+        </div>
+      </div>
+
+    </aside>
+  );
+}
+  
+  function TopNav({
+  go,
+  loggedInUser,
+  onLogout,
+}: {
+  go: (stage: AppStage) => void;
+  loggedInUser: string;
+  onLogout: () => void;
+}) {
+  return (
+    <header className="sticky top-0 z-40 border-b border-[#ded8cc] bg-[#fbfaf6]/95 backdrop-blur">
+
+      <div className="flex h-[73px] items-center justify-between px-5 lg:px-8">
+
+        {/* Logo */}
+        <button
+          onClick={() => go("home")}
+          className="flex items-center gap-3 text-left"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf1e9] text-2xl">
+            ⚖
+          </div>
+
+          <div>
+            <div className="text-xl font-extrabold text-[#26352b]">
+              Scheme Assist
+            </div>
+
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[#7c847b]">
+              Government Scheme Assistant
+            </div>
+          </div>
+        </button>
+
+        {/* Navigation */}
+        <nav className="hidden xl:flex items-center gap-8">
+
+          <button
+            onClick={() => go("home")}
+            className="font-semibold text-[#405343]"
+          >
+            Home
+          </button>
+
+          <button
+            onClick={() => go("eligibility")}
+            className="font-semibold text-[#405343]"
+          >
+            Eligibility Check
+          </button>
+
+          <button
+            onClick={() => go("schemes")}
+            className="font-semibold text-[#405343]"
+          >
+            Schemes
+          </button>
+
+          <button
+            onClick={() => go("guidance")}
+            className="font-semibold text-[#405343]"
+          >
+            AI Advisor
+          </button>
+
+          <button
+            onClick={() => go("guidance")}
+            className="font-semibold text-[#405343]"
+          >
+            My Applications
+          </button>
+
+        </nav>
+
+        {/* User */}
+        <div className="flex items-center gap-3">
+
+          <div className="hidden sm:block text-right">
+            <p className="text-sm font-bold text-[#303b33]">
+              {loggedInUser}
+            </p>
+
+            <p className="text-xs text-[#7d847d]">
+              Citizen
+            </p>
+          </div>
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5ebe1] text-xl">
+            ♙
+          </div>
+
+          <button
+            onClick={onLogout}
+            className="hidden sm:block rounded-xl border border-[#cfd5cb] px-3 py-2 text-sm font-semibold text-[#526254]"
+          >
+            Logout
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+  );
+}
+
+  function DashboardShell({
+  children,
+  go,
+  loggedInUser,
+  onLogout,
+  appStage,
+}: {
+  children: ReactNode;
+  go: (stage: AppStage) => void;
+  loggedInUser: string;
+  onLogout: () => void;
+  appStage: AppStage;
+}) {
+  return (
+    <div className="min-h-screen bg-[#f5f6f2] text-[#30352f]">
+
+      <TopNav
+        go={go}
+        loggedInUser={loggedInUser}
+        onLogout={onLogout}
+      />
+
+      <div className="flex">
+
+        <Sidebar
+          go={go}
+          appStage={appStage}
+        />
+
+        <main className="min-w-0 flex-1">
+          {children}
+        </main>
+
+      </div>
+
+    </div>
+  );
+}
 function SideButton({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-semibold transition ${active ? "bg-[#eaf1e7] text-[#416048]" : "text-[#525b53] hover:bg-[#f1f3ee]"}`}>
