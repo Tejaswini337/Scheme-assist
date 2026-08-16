@@ -114,7 +114,7 @@ export default function App() {
   const [applications, setApplications] = useState<any[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState("Citizen");
-  const [loggedInEmail, setLoggedInEmail] = useState("");
+  const [loggedInEmail, setLoggedInEmail] = useState(localStorage.getItem("loggedInEmail") || "");
   const [aiMessage, setAiMessage] = useState("");
 const [aiReply, setAiReply] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
@@ -204,6 +204,7 @@ const [aiLoading, setAiLoading] = useState(false);
 
     setLoggedInUser(data.user.name);
     setLoggedInEmail(data.user.email);
+    localStorage.setItem("loggedInEmail", data.user.email);
 
     setLoginEmail("");
     setLoginPassword("");
