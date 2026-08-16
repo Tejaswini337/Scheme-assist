@@ -5,6 +5,7 @@ from services.eligibility_engine import check_scheme_eligibility
 from google import genai
 import os
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 mongo_uri = os.environ.get("MONGODB_URI")
 app = Flask(__name__)
@@ -44,6 +45,10 @@ def test_db():
             "success": False,
             "error": str(e)
         }), 500
+# 
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
 @app.route("/api/register", methods=["POST"])
 def register():
     try:
@@ -52,6 +57,7 @@ def register():
         name = data.get("name")
         email = data.get("email")
         password = data.get("password")
+        password_hash = generate_password_hash(password)
 
         # Basic validation
         if not name or not email or not password:
@@ -71,56 +77,14 @@ def register():
                 "message": "User already registered."
             }), 409
 
-        # Store user
-        user = {
-            "name": name,
-            "email": email,
-            "password": password
-        }
-
-        db.users.insert_one(user)
-
-        return jsonify({
-            "success": True,
-            "message": "Registration successful!"
-        }), 201
-
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500@app.route("/api/register", methods=["POST"])
-def register():
-    try:
-        data = request.get_json()
-
-        name = data.get("name")
-        email = data.get("email")
-        password = data.get("password")
-
-        # Basic validation
-        if not name or not email or not password:
-            return jsonify({
-                "success": False,
-                "message": "Name, email and password are required."
-            }), 400
-
-        # Check whether user already exists
-        existing_user = db.users.find_one({
-            "email": email
-        })
-
-        if existing_user:
-            return jsonify({
-                "success": False,
-                "message": "User already registered."
-            }), 409
+        # Hash password
+        password_hash = generate_password_hash(password)
 
         # Store user
         user = {
             "name": name,
             "email": email,
-            "password": password
+            "password": password_hash
         }
 
         db.users.insert_one(user)
@@ -136,6 +100,7 @@ def register():
             "message": str(e)
         }), 500
 
+
 @app.route("/api/login", methods=["POST"])
 def login():
     try:
@@ -143,6 +108,7 @@ def login():
 
         email = data.get("email")
         password = data.get("password")
+        password_hash = generate_password_hash(password)
 
         if not email or not password:
             return jsonify({
@@ -160,7 +126,8 @@ def login():
                 "message": "User not found."
             }), 401
 
-        if user["password"] != password:
+        # Verify hashed password
+        if not check_password_hash(user["password"], password):
             return jsonify({
                 "success": False,
                 "message": "Incorrect password."
