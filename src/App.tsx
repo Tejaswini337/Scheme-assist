@@ -98,9 +98,44 @@ const schemes: Scheme[] = [
 ];
 
 const states = [
-  "Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Kerala",
-  "Maharashtra", "Odisha", "West Bengal", "Gujarat", "Rajasthan",
-  "Madhya Pradesh", "Uttar Pradesh", "Bihar", "Delhi", "Other"
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+
+  // Union Territories
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
 ];
 
 export default function App() {
@@ -329,6 +364,7 @@ const handleAIChat = async (
     setAiLoading(false);
   }
 };
+
  const handleCheckEligibility = async (
   e: import("react").FormEvent
 ) => {
@@ -676,7 +712,7 @@ const handleOpenApplications = async () => {
         <div className="mx-auto max-w-[1500px] px-5 py-8 lg:px-10">
           <div className="mb-7">
             <p className="text-sm font-medium text-[#758077]">Citizen Dashboard</p>
-            <h1 className="mt-1 text-3xl font-extrabold">Good morning, {loggedInUser}! 👋</h1>
+            <h1 className="mt-1 text-3xl font-extrabold">Hello, {loggedInUser}! 👋</h1>
             <p className="mt-2 text-[#707870]">Let's find the government schemes you are eligible for.</p>
           </div>
 
