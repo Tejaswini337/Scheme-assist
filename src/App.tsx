@@ -115,6 +115,9 @@ export default function App() {
   const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState("Citizen");
   const [loggedInEmail, setLoggedInEmail] = useState("");
+  const [aiMessage, setAiMessage] = useState("");
+const [aiReply, setAiReply] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
@@ -278,7 +281,53 @@ export default function App() {
     setMatchedSchemes([]);
     go("landing");
   };
+const handleAIChat = async (
+  e: import("react").FormEvent
+) => {
+  e.preventDefault();
 
+  if (!aiMessage.trim()) {
+    return;
+  }
+
+  setAiLoading(true);
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:5000/api/ai/chat",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: aiMessage,
+           email: loggedInEmail,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "AI assistant failed.");
+      return;
+    }
+
+    setAiReply(data.reply);
+    setAiMessage("");
+
+  } catch (error) {
+    console.error("AI chat error:", error);
+
+    alert(
+      "Unable to connect to AI assistant. Please make sure Flask server is running."
+    );
+
+  } finally {
+    setAiLoading(false);
+  }
+};
  const handleCheckEligibility = async (
   e: import("react").FormEvent
 ) => {
@@ -1375,39 +1424,97 @@ if (appStage === "applications") {
   );
 }
 
-  if (appStage === "guidance") {
-    return (
-      <DashboardShell
-  go={go}
-  loggedInUser={loggedInUser}
-  onLogout={handleLogout}
-  appStage={appStage}
->
-        <div className="mx-auto max-w-5xl px-5 py-8 lg:px-10">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Application Guidance</p>
-          <h1 className="mt-2 text-3xl font-extrabold">How to proceed with a government scheme</h1>
-          <p className="mt-2 text-[#727b72]">Use these as general guidance. The official department or portal decides the final process and eligibility.</p>
-          <div className="mt-7 space-y-4">
-            {[
-              ["1", "Confirm eligibility", "Read the official scheme conditions and make sure your profile matches them."],
-              ["2", "Prepare documents", "Keep identity, address, income, caste/category, bank and other scheme-specific documents ready."],
-              ["3", "Use the official application channel", "Apply through the concerned government portal, service centre or designated office."],
-              ["4", "Save your reference number", "Keep the acknowledgement or application/reference number safely."],
-              ["5", "Track the application", "Use the official status-tracking facility where available."],
-            ].map(([n, title, text]) => (
-              <div key={n} className="flex gap-4 rounded-2xl border border-[#dfe3dc] bg-white p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#55745c] font-bold text-white">{n}</div>
-                <div><h2 className="font-bold">{title}</h2><p className="mt-1 text-sm leading-6 text-[#747c74]">{text}</p></div>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => go("home")} className="mt-7 rounded-xl bg-[#55745c] px-6 py-3 font-bold text-white">← Back to Dashboard</button>
-        </div>
-      </DashboardShell>
-    );
-  }
+if (appStage === "guidance") {
+  return (
+    <DashboardShell
+      go={go}
+      loggedInUser={loggedInUser}
+      onLogout={handleLogout}
+      appStage={appStage}
+    >
+      <div className="mx-auto max-w-4xl px-5 py-10 lg:px-10">
 
-  return null;
+        {/* AI Assistant Header */}
+        <div className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#edf3e9] text-3xl">
+            🤖
+          </div>
+
+          <p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">
+            AI Advisor
+          </p>
+
+          <h1 className="mt-2 text-3xl font-extrabold text-[#30352f]">
+            Scheme Assist AI
+          </h1>
+
+          <p className="mx-auto mt-2 max-w-2xl text-[#727b72]">
+            Ask anything about Indian government schemes, eligibility,
+            benefits, documents and application procedures.
+          </p>
+        </div>
+
+        {/* AI Assistant */}
+        <div className="mt-8 rounded-3xl border border-[#dfe3dc] bg-white p-6 shadow-sm">
+
+          {/* AI response */}
+          {aiReply ? (
+            <div className="rounded-2xl bg-[#eef3eb] p-5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🤖</span>
+
+                <p className="text-sm font-bold text-[#55745c]">
+                  Scheme Assist AI
+                </p>
+              </div>
+
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[#30352f]">
+                {aiReply}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-[#f5f7f2] p-6 text-center">
+              <p className="font-bold text-[#405343]">
+                👋 Hello! How can I help you?
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-[#747c74]">
+                Ask me about government schemes, eligibility,
+                benefits, required documents or application procedures.
+              </p>
+            </div>
+          )}
+
+          {/* Ask Question */}
+          <form
+            onSubmit={handleAIChat}
+            className="mt-6"
+          >
+            <textarea
+              value={aiMessage}
+              onChange={(e) => setAiMessage(e.target.value)}
+              placeholder="Ask your question here..."
+              rows={4}
+              className="w-full resize-none rounded-2xl border border-[#cfd5cb] bg-[#fbfaf6] px-4 py-4 text-sm text-[#30352f] outline-none focus:border-[#55745c]"
+            />
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="submit"
+                disabled={aiLoading || !aiMessage.trim()}
+                className="rounded-xl bg-[#55745c] px-7 py-3 font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {aiLoading ? "Thinking..." : "Ask AI →"}
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+    </DashboardShell>
+  );
+}
 }
 
   function Sidebar({

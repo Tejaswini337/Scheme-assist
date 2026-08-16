@@ -2,8 +2,16 @@ from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from flask_cors import CORS
 from services.eligibility_engine import check_scheme_eligibility
+from google import genai
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
+
+gemini_client = genai.Client(
+    api_key=os.environ.get("GEMINI_API_KEY")
+)
 CORS(app)
 # MongoDB connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -595,6 +603,69 @@ def get_user_applications(user_email):
         }), 200
 
     except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+@app.route("/api/ai/chat", methods=["POST"])
+def ai_chat():
+    try:
+        data = request.get_json() or {}
+
+        message = data.get("message", "").strip()
+        email = data.get("email", "")
+
+        if not message:
+            return jsonify({
+                "success": False,
+                "message": "Please enter a question."
+            }), 400
+
+        user_profile = {}
+
+        if email:
+            user = db.users.find_one(
+                {"email": email},
+                {"_id": 0, "profile": 1}
+            )
+
+            if user:
+                user_profile = user.get("profile", {})
+
+        prompt = f"""
+You are Scheme Assist AI, an assistant for Indian government schemes.
+
+User question:
+{message}
+
+User's saved profile:
+{user_profile}
+
+Instructions:
+- Answer clearly and simply.
+- Help with Indian government schemes, eligibility, benefits,
+  required documents and application guidance.
+- Use the user's profile when the question is about their eligibility.
+- Do not invent government scheme names, benefits, links or eligibility rules.
+- If exact information is unavailable, clearly say so.
+- Final eligibility is decided by the concerned government department.
+- For application links, recommend the official government portal.
+- If the question is unrelated to government schemes, answer briefly and helpfully.
+"""
+
+        response = gemini_client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt
+        )
+
+        return jsonify({
+            "success": True,
+            "reply": response.text
+        }), 200
+
+    except Exception as e:
+        print("AI error:", e)
+
         return jsonify({
             "success": False,
             "message": str(e)
