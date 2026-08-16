@@ -294,7 +294,7 @@ const handleAIChat = async (
 
   try {
     const response = await fetch(
-      "http://127.0.0.1:5000/api/ai/chat",
+      "https://scheme-assist-d15d.onrender.com/api/ai/chat",
       {
         method: "POST",
         headers: {
@@ -477,7 +477,7 @@ let appliedSchemeNames: string[] = [];
 if (loggedInEmail) {
   try {
     const applicationResponse = await fetch(
-      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
@@ -528,7 +528,7 @@ const handleApplyScheme = async (scheme: any) => {
 
   try {
     const response = await fetch(
-      "http://127.0.0.1:5000/api/applications",
+      "https://scheme-assist-d15d.onrender.com/api/applications",
       {
         method: "POST",
         headers: {
@@ -569,7 +569,7 @@ const handleOpenApplications = async () => {
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
