@@ -218,7 +218,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`YojanaSetu AI server listening on http://0.0.0.0:${PORT}`);
+    console.log(`Scheme Assist server listening on http://localhost:${PORT}`);
   });
 }
 

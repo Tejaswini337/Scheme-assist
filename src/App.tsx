@@ -1,6 +1,14 @@
-import { useState, type ReactNode } from "react";
+import { useEffect,useState, type ReactNode } from "react";
 
-type AppStage = "landing" | "auth" | "home" | "eligibility" | "results" | "schemes" | "guidance";
+type AppStage =
+  | "landing"
+  | "auth"
+  | "home"
+  | "eligibility"
+  | "results"
+  | "schemes"
+  | "guidance"
+  | "applications";
 type AuthMode = "login" | "register";
 
 type FormData = {
@@ -38,6 +46,8 @@ type Scheme = {
   description: string;
   benefit: string;
   reason: string;
+  missedReason?: string;
+  documents?: string[];
 };
 
 const initialForm: FormData = {
@@ -98,7 +108,13 @@ export default function App() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [formData, setFormData] = useState<FormData>(initialForm);
   const [matchedSchemes, setMatchedSchemes] = useState<Scheme[]>([]);
+  const [verificationSchemes, setVerificationSchemes] = useState<any[]>([]);
+  const [notEligibleSchemes, setNotEligibleSchemes] = useState<any[]>([]);
+  const [potentialMissedBenefits, setPotentialMissedBenefits] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState("Citizen");
+  const [loggedInEmail, setLoggedInEmail] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
@@ -125,16 +141,84 @@ export default function App() {
       formData.casteCertificate, formData.incomeCertificate
     ].filter(Boolean).length / 13 * 100
   );
-
-  const handleLogin = (e: import("react").FormEvent) => {
-    e.preventDefault();
-    if (!loginEmail || !loginPassword) {
-      alert("Please enter email and password.");
+  useEffect(() => {
+  const loadApplications = async () => {
+    if (!loggedInEmail) {
       return;
     }
-    setLoggedInUser(loginEmail.split("@")[0] || "Citizen");
-    go("home");
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+          loggedInEmail
+        )}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setApplications(data.applications || []);
+      }
+    } catch (error) {
+      console.error(
+        "Unable to load applications:",
+        error
+      );
+    }
   };
+
+  loadApplications();
+}, [loggedInEmail]);
+
+  const handleLogin = async (e: import("react").FormEvent) => {
+  e.preventDefault();
+
+  if (!loginEmail || !loginPassword) {
+    alert("Please enter email and password.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: loginEmail,
+        password: loginPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Login failed.");
+      return;
+    }
+
+    alert("Login successful!");
+
+    setLoggedInUser(data.user.name);
+    setLoggedInEmail(data.user.email);
+
+    setLoginEmail("");
+    setLoginPassword("");
+
+    if (data.user.profile) {
+  setFormData(data.user.profile);
+  go("home");
+} else {
+  go("eligibility");
+}
+
+  } catch (error) {
+    console.error("Login error:", error);
+    alert(
+      "Unable to connect to the backend. Please make sure Flask server is running."
+    );
+  }
+};
 
   const handleRegister = async (e: import("react").FormEvent) => {
   e.preventDefault();
@@ -189,42 +273,276 @@ export default function App() {
 };
   const handleLogout = () => {
     setLoggedInUser("Citizen");
+    setLoggedInEmail("");
     setFormData(initialForm);
     setMatchedSchemes([]);
     go("landing");
   };
 
-  const handleCheckEligibility = (e: import("react").FormEvent) => {
-    e.preventDefault();
+ const handleCheckEligibility = async (
+  e: import("react").FormEvent
+) => {
+  e.preventDefault();
+   if (
+    !formData.age ||
+    !formData.annualIncome ||
+    !formData.occupation ||
+    !formData.category ||
+    !formData.gender ||
+    !formData.state ||
+    !formData.district
+  ) {
+    alert("Please complete the eligibility form first.");
+    go("eligibility");
+    return;
+  }
+  try {
+    const profileToSave = {
+  fullName: formData.fullName,
 
-    const age = Number(formData.age) || 0;
-    const income = Number(formData.annualIncome) || 0;
-    const result: Scheme[] = [];
+  age: formData.age,
+  gender: formData.gender,
+  maritalStatus: formData.maritalStatus,
 
-    if (["Farmer", "Agricultural Worker"].includes(formData.occupation)) {
-      result.push(schemes[2], schemes[13]);
-    }
-    if (income <= 500000 || formData.houseOwnership === "No house" || formData.houseOwnership === "Rented") {
-      result.push(schemes[1]);
-    }
-    if (income <= 300000 || formData.bplStatus === "Yes") result.push(schemes[0]);
-    if (formData.studentStatus === "Yes" || age < 25) result.push(schemes[3]);
-    if (age >= 60 || formData.seniorCitizen === "Yes" || formData.widowSingleParent === "Yes") {
-      result.push(schemes[4], schemes[12]);
-    }
-    if (formData.occupation === "Daily Wage Worker" || formData.occupation === "Self Employed") {
-      result.push(schemes[6], schemes[9]);
-    }
-    if (formData.occupation === "Business") result.push(schemes[8], schemes[9]);
-    if (formData.category === "SC" || formData.category === "ST" || formData.category === "OBC" || formData.category === "EWS") {
-      result.push(schemes[3]);
+  aadhaarAvailable: formData.aadhaarAvailable,
+  casteCertificate: formData.casteCertificate,
+  category: formData.category,
+
+  disability: formData.disability,
+  disabilityCertificate: formData.disabilityCertificate,
+
+  state: formData.state,
+  district: formData.district,
+  town: formData.town,
+  pincode: formData.pincode,
+  ruralUrban: formData.ruralUrban,
+
+  annualIncome: formData.annualIncome,
+  occupation: formData.occupation,
+  employmentStatus: formData.employmentStatus,
+
+  familySize: formData.familySize,
+  bplStatus: formData.bplStatus,
+
+  houseOwnership: formData.houseOwnership,
+  studentStatus: formData.studentStatus,
+  seniorCitizen: formData.seniorCitizen,
+  widowSingleParent: formData.widowSingleParent,
+
+  incomeCertificate: formData.incomeCertificate,
+  residenceCertificate: formData.residenceCertificate,
+};
+console.log("Logged in email:", loggedInEmail);
+const profileResponse = await fetch(
+  "http://127.0.0.1:5000/api/profile",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: loggedInEmail,
+      profile: profileToSave,
+    }),
+  }
+);
+
+const profileData = await profileResponse.json();
+console.log("PROFILE SAVE RESPONSE:", profileData);
+
+if (!profileResponse.ok) {
+  alert(profileData.message || "Unable to save profile.");
+  return;
+}
+    const response = await fetch(
+      "http://127.0.0.1:5000/api/eligibility/check",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+  fullName: formData.fullName,
+  age: formData.age,
+  gender: formData.gender,
+  maritalStatus: formData.maritalStatus,
+
+  aadhaarAvailable: formData.aadhaarAvailable,
+  casteCertificate: formData.casteCertificate,
+  category: formData.category,
+
+  disability: formData.disability,
+  disabilityCertificate: formData.disabilityCertificate,
+
+  state: formData.state,
+  district: formData.district,
+  town: formData.town,
+  pincode: formData.pincode,
+  ruralUrban: formData.ruralUrban,
+
+  annualIncome: formData.annualIncome,
+  occupation: formData.occupation,
+  employmentStatus: formData.employmentStatus,
+
+  familySize: formData.familySize,
+  bplStatus: formData.bplStatus,
+
+  houseOwnership: formData.houseOwnership,
+  studentStatus: formData.studentStatus,
+  seniorCitizen: formData.seniorCitizen,
+  widowSingleParent: formData.widowSingleParent,
+
+  incomeCertificate: formData.incomeCertificate,
+  residenceCertificate: formData.residenceCertificate,
+}),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Eligibility check failed.");
+      return;
     }
 
-    const unique = result.filter((s, i, arr) => i === arr.findIndex((x) => x.name === s.name));
-    setMatchedSchemes(unique.length ? unique : [schemes[0], schemes[1], schemes[3]]);
-    go("results");
-  };
+    console.log("Eligibility Result:", data);
 
+    // Store backend results
+    
+    setMatchedSchemes(data.eligibleSchemes || []);
+
+setVerificationSchemes(
+  data.verificationSchemes || []
+);
+
+setNotEligibleSchemes(
+  data.notEligibleSchemes || []
+);
+
+// Get schemes already applied by this user
+let appliedSchemeNames: string[] = [];
+
+if (loggedInEmail) {
+  try {
+    const applicationResponse = await fetch(
+      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+        loggedInEmail
+      )}`
+    );
+
+    const applicationData = await applicationResponse.json();
+
+    if (applicationResponse.ok) {
+      appliedSchemeNames = (
+        applicationData.applications || []
+      ).map(
+        (application: any) => application.schemeName
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Unable to fetch application history:",
+      error
+    );
+  }
+}
+
+// Only schemes that the user has NOT already applied for
+const missedBenefits = (
+  data.potentialMissedBenefits || []
+).filter(
+  (scheme: any) =>
+    !appliedSchemeNames.includes(scheme.name)
+);
+
+setPotentialMissedBenefits(missedBenefits);
+
+go("results");
+
+  } catch (error) {
+    console.error("Eligibility error:", error);
+
+    alert(
+      "Unable to connect to the backend. Please make sure Flask is running."
+    );
+  }
+};
+const handleApplyScheme = async (scheme: any) => {
+  if (!loggedInUser) {
+    alert("Please login first.");
+    go("auth");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:5000/api/applications",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userEmail: loggedInEmail,
+          schemeName: scheme.name,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Unable to save application.");
+      return;
+    }
+
+    alert("Application saved successfully!");
+
+  } catch (error) {
+    console.error("Application error:", error);
+
+    alert(
+      "Unable to connect to the backend. Please make sure Flask is running."
+    );
+  }
+};
+const handleOpenApplications = async () => {
+  if (!loggedInEmail) {
+    alert("Please login first.");
+    go("auth");
+    return;
+  }
+
+  setApplicationsLoading(true);
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+        loggedInEmail
+      )}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Unable to load applications.");
+      return;
+    }
+
+    setApplications(data.applications || []);
+
+    go("applications");
+
+  } catch (error) {
+    console.error("Applications error:", error);
+
+    alert(
+      "Unable to connect to the backend. Please make sure Flask is running."
+    );
+  } finally {
+    setApplicationsLoading(false);
+  }
+};
   const profileItems = [
     { title: "Personal Details", sub: "Name, Age, Gender", complete: !!(formData.fullName && formData.age && formData.gender) },
     { title: "Address Details", sub: "State, District, Pincode", complete: !!(formData.state && formData.district && formData.pincode) },
@@ -293,9 +611,8 @@ export default function App() {
  
 
   if (appStage === "home") {
-    const eligibleCount = matchedSchemes.length || 12;
-    const missedCount = Math.max(2, 19 - eligibleCount);
-
+   const eligibleCount = matchedSchemes.length;
+   const missedCount = potentialMissedBenefits.length; 
     return (
       <DashboardShell
   go={go}
@@ -312,7 +629,7 @@ export default function App() {
 
           <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <DashboardCard icon="✓" title="Eligible Schemes" value={String(eligibleCount)} tone="green" onClick={() => go("schemes")} footer="View all eligible schemes →" />
-            <DashboardCard icon="₹" title="Potential Benefits" value="₹1,45,000" tone="gold" footer="Total estimated annual benefit" />
+            <DashboardCard icon="₹" title="Potential Benefits" value="₹6000" tone="gold" footer="Total estimated annual benefit" />
             <DashboardCard icon="◇" title="Missed Benefits" value={String(missedCount)} tone="rose" onClick={() => go("results")} footer="Schemes you might be missing" />
             <DashboardCard icon="◔" title="Profile Completion" value={`${profileCompletion}%`} tone="sage" onClick={() => go("eligibility")} footer="Complete your profile">
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dce5dc]"><div className="h-full rounded-full bg-[#55745c]" style={{ width: `${profileCompletion}%` }} /></div>
@@ -329,8 +646,7 @@ export default function App() {
               <button onClick={() => go("eligibility")} className="rounded-xl bg-[#55745c] px-6 py-3.5 font-bold text-white hover:bg-[#48654f]">Check My Eligibility →</button>
             </div>
           </section>
-
-          <section className="mt-6 grid gap-6 xl:grid-cols-2">
+          <section>
             <div className="rounded-2xl border border-[#dfe3dc] bg-white p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-extrabold">Top Eligible Schemes for You</h2>
@@ -355,8 +671,7 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-extrabold">Complete Your Profile</h2>
                 <button onClick={() => go("eligibility")} className="font-semibold text-[#55745c]">Edit Profile</button>
-              </div>
-              <div className="mt-3">
+                <div className="mt-3">
                 {profileItems.map((item) => (
                   <button key={item.title} onClick={() => go("eligibility")} className="flex w-full items-center gap-4 border-b border-[#edf0eb] py-4 text-left hover:bg-[#f7f9f5]">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef3eb] text-[#55745c]">●</div>
@@ -368,12 +683,64 @@ export default function App() {
                     <span className="text-[#9aa19a]">›</span>
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           </section>
 
           {selectedScheme && <SchemeModal scheme={selectedScheme} onClose={() => setSelectedScheme(null)} onGuidance={() => { setSelectedScheme(null); go("guidance"); }} />}
         </div>
+        <section className="mt-6 rounded-2xl border border-[#dfe3dc] bg-white p-6">
+  <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-xl font-extrabold">
+        My Applications
+      </h2>
+
+      <p className="mt-1 text-sm text-[#747c74]">
+        Track the government schemes you have applied for.
+      </p>
+    </div>
+
+    <button
+  onClick={handleOpenApplications}
+  disabled={applicationsLoading}
+  className="rounded-xl bg-[#55745c] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
+>
+  {applicationsLoading
+    ? "Loading..."
+    : "View Applications →"}
+</button>
+  </div>
+
+  <div className="mt-5">
+    {applications.length === 0 ? (
+      <p className="text-sm text-[#7a827a]">
+        You haven't applied for any schemes yet.
+      </p>
+    ) : (
+      <div className="grid gap-3 md:grid-cols-2">
+        {applications.slice(0, 4).map((application, index) => (
+          <div
+            key={`${application.schemeName}-${index}`}
+            className="rounded-xl border border-[#e1e5df] bg-[#f7f9f5] p-4"
+          >
+            <p className="font-bold">
+              {application.schemeName}
+            </p>
+
+            <p className="mt-1 text-sm text-[#747c74]">
+              Status:{" "}
+              <span className="font-semibold text-[#55745c]">
+                {application.status || "Applied"}
+              </span>
+            </p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
       </DashboardShell>
     );
   }
@@ -477,76 +844,536 @@ export default function App() {
     );
   }
 
-  if (appStage === "results") {
-    const missed = schemes.filter((s) => !matchedSchemes.some((m) => m.name === s.name)).slice(0, 5);
-    return (
-      <DashboardShell
-  go={go}
-  loggedInUser={loggedInUser}
-  onLogout={handleLogout}
-  appStage={appStage}
->
-        <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
-          <div className="rounded-3xl border border-[#dfe3dc] bg-white p-7">
-            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">Eligibility Results</p>
-            <h1 className="mt-2 text-3xl font-extrabold">Schemes that may be relevant to you</h1>
-            <p className="mt-2 max-w-3xl text-[#727b72]">Based on the information provided, these schemes may be worth checking further. Final eligibility is determined by the concerned government department.</p>
-          </div>
+    if (appStage === "results") {
+  return (
+    <DashboardShell
+      go={go}
+      loggedInUser={loggedInUser}
+      onLogout={handleLogout}
+      appStage={appStage}
+    >
+      <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
 
-          <section className="mt-6 grid gap-5 md:grid-cols-3">
-            <Stat title="Applicant" value={formData.fullName || "Citizen"} />
-            <Stat title="Potential Matches" value={String(matchedSchemes.length)} />
-            <Stat title="Location" value={formData.district && formData.state ? `${formData.district}, ${formData.state}` : "Not provided"} />
-          </section>
+        {/* Header */}
+        <div className="rounded-3xl border border-[#dfe3dc] bg-white p-7">
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">
+            Eligibility Results
+          </p>
 
-          <section className="mt-8">
-            <div className="flex items-end justify-between">
-              <h2 className="text-2xl font-extrabold">Recommended Schemes</h2>
-              <button onClick={() => go("schemes")} className="font-semibold text-[#55745c]">View all schemes →</button>
-            </div>
-            <div className="mt-5 grid gap-5 lg:grid-cols-2">
-              {matchedSchemes.map((scheme) => (
-                <SchemeResultCard key={scheme.name} scheme={scheme} onGuidance={() => go("guidance")} />
-              ))}
-            </div>
-          </section>
+          <h1 className="mt-2 text-3xl font-extrabold">
+            Your Government Scheme Results
+          </h1>
 
-          <section className="mt-8 rounded-2xl border border-[#e4dfd5] bg-[#fbfaf6] p-6">
-            <h2 className="text-xl font-extrabold">Possible Missed Benefits</h2>
-            <p className="mt-1 text-sm text-[#747c74]">These schemes were not in your current match set. Review them because eligibility can depend on additional government conditions.</p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {missed.map((scheme) => (
-                <button key={scheme.name} onClick={() => setSelectedScheme(scheme)} className="rounded-xl border border-[#ded8cc] bg-white p-4 text-left hover:bg-[#f7f9f5]">
-                  <p className="font-bold">{scheme.name}</p>
-                  <p className="mt-1 text-sm text-[#7a827a]">{scheme.category} · Review eligibility</p>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="mt-8 rounded-2xl border border-[#dfe3dc] bg-white p-6">
-            <h2 className="text-xl font-extrabold">Application Guidance</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-4">
-              {["Check scheme conditions", "Prepare required documents", "Apply through official channel", "Track application status"].map((x, i) => (
-                <div key={x} className="rounded-xl bg-[#f1f4ee] p-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#55745c] text-sm font-bold text-white">{i + 1}</div>
-                  <p className="mt-3 font-semibold">{x}</p>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => go("guidance")} className="mt-5 rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white">Open Full Guidance →</button>
-          </section>
-
-          <div className="mt-7 flex flex-wrap gap-3">
-            <button onClick={() => go("eligibility")} className="rounded-xl border border-[#cbd4c8] bg-white px-5 py-3 font-bold text-[#55745c]">Edit & Check Again</button>
-            <button onClick={() => go("home")} className="rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white">Back to Home</button>
-          </div>
-
-          {selectedScheme && <SchemeModal scheme={selectedScheme} onClose={() => setSelectedScheme(null)} onGuidance={() => { setSelectedScheme(null); go("guidance"); }} />}
+          <p className="mt-2 max-w-3xl text-[#727b72]">
+            Based on the information you provided, we compared your profile
+            with the available Scheme Assist eligibility rules. Final
+            eligibility is always confirmed by the concerned government
+            department.
+          </p>
         </div>
-      </DashboardShell>
-    );
-  }
+
+
+        {/* Statistics */}
+        <section className="mt-6 grid gap-5 md:grid-cols-4">
+
+          <Stat
+            title="Applicant"
+            value={formData.fullName || "Citizen"}
+          />
+
+          <Stat
+            title="Eligible"
+            value={String(matchedSchemes.length)}
+          />
+
+          <Stat
+            title="Verification Needed"
+            value={String(verificationSchemes.length)}
+          />
+
+          <Stat
+            title="Location"
+            value={
+              formData.district && formData.state
+                ? `${formData.district}, ${formData.state}`
+                : "Not provided"
+            }
+          />
+
+        </section>
+
+
+        {/* ================================================= */}
+        {/* ELIGIBLE SCHEMES */}
+        {/* ================================================= */}
+
+        <section className="mt-8">
+
+          <div className="flex items-end justify-between">
+
+            <div>
+              <h2 className="text-2xl font-extrabold">
+                ✅ Eligible Schemes
+              </h2>
+
+              <p className="mt-1 text-sm text-[#747c74]">
+                Schemes whose available eligibility conditions match your
+                profile.
+              </p>
+            </div>
+
+            <button
+              onClick={() => go("schemes")}
+              className="font-semibold text-[#55745c]"
+            >
+              View all schemes →
+            </button>
+
+          </div>
+
+
+          {matchedSchemes.length > 0 ? (
+
+            <div className="mt-5 grid gap-5 lg:grid-cols-2">
+
+              {matchedSchemes.map((scheme) => (
+
+                <SchemeResultCard
+                  key={scheme.name}
+                  scheme={scheme}
+                  onGuidance={() => {
+                    setSelectedScheme(scheme);
+                  }}
+                  onApply={() => handleApplyScheme(scheme)}
+                />
+
+              ))}
+
+            </div>
+
+          ) : (
+
+            <div className="mt-5 rounded-2xl border border-[#e4dfd5] bg-[#fbfaf6] p-6">
+
+              <p className="font-bold">
+                No schemes matched your current profile.
+              </p>
+
+              <p className="mt-1 text-sm text-[#747c74]">
+                You can edit your details and check again.
+              </p>
+
+            </div>
+
+          )}
+
+        </section>
+
+
+        {/* ================================================= */}
+        {/* VERIFICATION SCHEMES */}
+        {/* ================================================= */}
+
+        {verificationSchemes.length > 0 && (
+
+          <section className="mt-8 rounded-2xl border border-[#eadfbd] bg-[#fffaf0] p-6">
+
+            <h2 className="text-xl font-extrabold">
+              ⚠️ Needs Official Verification
+            </h2>
+
+            <p className="mt-1 text-sm text-[#7a7466]">
+              These schemes may be relevant, but Scheme Assist does not have
+              enough information to make a final eligibility decision.
+              Please verify through the official government channel.
+            </p>
+
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+
+              {verificationSchemes.map((scheme) => (
+
+                <button
+                  key={scheme.name}
+                  onClick={() => setSelectedScheme(scheme)}
+                  className="rounded-xl border border-[#e4d9b9] bg-white p-5 text-left hover:bg-[#fffdf7]"
+                >
+
+                  <p className="font-bold">
+                    {scheme.name}
+                  </p>
+
+                  <p className="mt-1 text-sm text-[#7a827a]">
+                    {scheme.category}
+                  </p>
+
+                  <p className="mt-3 text-sm text-[#665f50]">
+                    {scheme.reason ||
+                      "Additional official verification is required."}
+                  </p>
+                  {scheme.missedReason && (
+  <div className="mt-3 rounded-xl bg-[#fff8e7] p-3">
+    <p className="text-xs font-bold uppercase tracking-wider text-[#9a7415]">
+      Why you may be missing this
+    </p>
+
+    <p className="mt-1 text-sm text-[#665f50]">
+      {scheme.missedReason}
+    </p>
+  </div>
+)}
+
+                  <p className="mt-3 font-semibold text-[#55745c]">
+                    View details →
+                  </p>
+
+                </button>
+
+              ))}
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* ================================================= */}
+        {/* NOT ELIGIBLE */}
+        {/* ================================================= */}
+
+        {notEligibleSchemes.length > 0 && (
+
+          <section className="mt-8 rounded-2xl border border-[#ead7d2] bg-[#fff8f6] p-6">
+
+            <h2 className="text-xl font-extrabold">
+              ❌ Not Matching Current Profile
+            </h2>
+
+            <p className="mt-1 text-sm text-[#806f6b]">
+              These schemes did not match one or more eligibility conditions
+              based on the information currently provided.
+            </p>
+
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+
+              {notEligibleSchemes.map((scheme) => (
+
+                <div
+                  key={scheme.name}
+                  className="rounded-xl border border-[#ead7d2] bg-white p-5"
+                >
+
+                  <p className="font-bold">
+                    {scheme.name}
+                  </p>
+
+                  <p className="mt-1 text-sm text-[#7a827a]">
+                    {scheme.category}
+                  </p>
+
+
+                  {scheme.reasons &&
+                    scheme.reasons.length > 0 && (
+
+                      <div className="mt-3">
+
+                        <p className="text-sm font-semibold text-[#665f50]">
+                          Reason:
+                        </p>
+
+                        <ul className="mt-1 list-disc pl-5 text-sm text-[#806f6b]">
+
+                          {scheme.reasons.map(
+                            (reason: string, index: number) => (
+
+                              <li key={index}>
+                                {reason}
+                              </li>
+
+                            )
+                          )}
+
+                        </ul>
+
+                      </div>
+
+                    )}
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </section>
+
+        )}
+        {/* ================================================= */}
+{/* POTENTIAL MISSED BENEFITS */}
+{/* ================================================= */}
+
+{potentialMissedBenefits.length > 0 && (
+
+  <section className="mt-8 rounded-2xl border border-[#e4dfd5] bg-[#fbfaf6] p-6">
+
+    <h2 className="text-xl font-extrabold">
+      🎯 Potential Missed Benefits
+    </h2>
+
+    <p className="mt-1 text-sm text-[#747c74]">
+      These schemes appear to match your available profile
+      information. Check whether you have already applied for
+      or received these benefits.
+    </p>
+
+    <div className="mt-5 grid gap-4 md:grid-cols-2">
+
+      {potentialMissedBenefits.map((scheme) => (
+
+        <button
+          key={scheme.name}
+          onClick={() => setSelectedScheme(scheme)}
+          className="rounded-xl border border-[#ded8cc] bg-white p-5 text-left hover:bg-[#f7f9f5]"
+        >
+
+          <p className="font-bold">
+            {scheme.name}
+          </p>
+
+          <p className="mt-1 text-sm text-[#7a827a]">
+            {scheme.category}
+          </p>
+
+          <p className="mt-3 text-sm text-[#665f50]">
+            {scheme.reason}
+          </p>
+
+          <p className="mt-3 font-semibold text-[#55745c]">
+            Review benefit →
+          </p>
+
+        </button>
+
+      ))}
+
+    </div>
+
+  </section>
+
+)}
+
+
+        {/* ================================================= */}
+        {/* APPLICATION GUIDANCE */}
+        {/* ================================================= */}
+
+        <section className="mt-8 rounded-2xl border border-[#dfe3dc] bg-white p-6">
+
+          <h2 className="text-xl font-extrabold">
+            Application Guidance
+          </h2>
+
+          <p className="mt-1 text-sm text-[#747c74]">
+            Once you identify a potentially eligible scheme, follow these
+            steps before applying.
+          </p>
+
+
+          <div className="mt-5 grid gap-4 md:grid-cols-4">
+
+            {[
+              "Check scheme conditions",
+              "Prepare required documents",
+              "Apply through official channel",
+              "Track application status"
+            ].map((x, i) => (
+
+              <div
+                key={x}
+                className="rounded-xl bg-[#f1f4ee] p-4"
+              >
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#55745c] text-sm font-bold text-white">
+                  {i + 1}
+                </div>
+
+                <p className="mt-3 font-semibold">
+                  {x}
+                </p>
+
+              </div>
+
+            ))}
+
+          </div>
+
+
+          <button
+            onClick={() => go("guidance")}
+            className="mt-5 rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white"
+          >
+            Open Full Guidance →
+          </button>
+
+        </section>
+
+
+        {/* ================================================= */}
+        {/* BOTTOM BUTTONS */}
+        {/* ================================================= */}
+
+        <div className="mt-7 flex flex-wrap gap-3">
+
+          <button
+            onClick={() => go("eligibility")}
+            className="rounded-xl border border-[#cbd4c8] bg-white px-5 py-3 font-bold text-[#55745c]"
+          >
+            Edit & Check Again
+          </button>
+
+          <button
+            onClick={() => go("home")}
+            className="rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white"
+          >
+            Back to Home
+          </button>
+
+        </div>
+
+
+        {/* Scheme Modal */}
+
+        {selectedScheme && (
+
+          <SchemeModal
+            scheme={selectedScheme}
+            onClose={() => setSelectedScheme(null)}
+            onGuidance={() => {
+              setSelectedScheme(null);
+              go("guidance");
+            }}
+          />
+
+        )}
+
+      </div>
+
+    </DashboardShell>
+  );
+}
+if (appStage === "applications") {
+  return (
+    <DashboardShell
+      go={go}
+      loggedInUser={loggedInUser}
+      onLogout={handleLogout}
+      appStage={appStage}
+    >
+      <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
+
+        <div className="mb-7">
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#7b867b]">
+            Application Center
+          </p>
+
+          <h1 className="mt-2 text-3xl font-extrabold">
+            My Applications
+          </h1>
+
+          <p className="mt-2 max-w-3xl text-[#727b72]">
+            Track the government schemes you have applied for.
+          </p>
+        </div>
+
+        {applications.length === 0 ? (
+          <div className="rounded-2xl border border-[#dfe3dc] bg-white p-10 text-center">
+
+            <div className="text-5xl">▤</div>
+
+            <h2 className="mt-4 text-xl font-extrabold">
+              No applications yet
+            </h2>
+
+            <p className="mt-2 text-sm text-[#747c74]">
+              Once you apply for a government scheme,
+              your application will appear here.
+            </p>
+
+            <button
+              onClick={() => go("schemes")}
+              className="mt-6 rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white"
+            >
+              Explore Schemes →
+            </button>
+
+          </div>
+        ) : (
+
+          <div className="grid gap-5 md:grid-cols-2">
+
+            {applications.map((application, index) => (
+
+              <div
+                key={`${application.schemeName}-${index}`}
+                className="rounded-2xl border border-[#dfe3dc] bg-white p-6"
+              >
+
+                <div className="flex items-start justify-between gap-4">
+
+                  <div>
+                    <span className="rounded-full bg-[#edf3e9] px-3 py-1 text-xs font-bold text-[#55745c]">
+                      Government Scheme
+                    </span>
+
+                    <h2 className="mt-4 text-xl font-extrabold">
+                      {application.schemeName}
+                    </h2>
+                  </div>
+
+                  <span className="rounded-full bg-[#fff4d8] px-3 py-1 text-xs font-bold text-[#9a7415]">
+                    {application.status || "Applied"}
+                  </span>
+
+                </div>
+
+                <div className="mt-5 rounded-xl bg-[#f4f6f1] p-4">
+
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">
+                    Applicant
+                  </p>
+
+                  <p className="mt-1 text-sm">
+                    {application.userEmail}
+                  </p>
+
+                </div>
+
+                <div className="mt-4 flex justify-between text-sm">
+
+                  <span className="text-[#7a827a]">
+                    Application Status
+                  </span>
+
+                  <span className="font-bold text-[#55745c]">
+                    {application.status || "Applied"}
+                  </span>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        )}
+
+      </div>
+    </DashboardShell>
+  );
+}
 
   if (appStage === "guidance") {
     return (
@@ -624,11 +1451,11 @@ export default function App() {
         />
 
         <SideButton
-          icon="▤"
-          label="Applications"
-          active={appStage === "guidance"}
-          onClick={() => go("guidance")}
-        />
+   icon="▤"
+  label="Applications"
+  active={appStage === "applications"}
+  onClick={()=>go("applications")}
+/>
 
         <SideButton
           icon="□"
@@ -720,78 +1547,50 @@ export default function App() {
         </button>
 
         {/* Navigation */}
-        <nav className="hidden xl:flex items-center gap-8">
+       <div className="flex items-center gap-6">
 
-          <button
-            onClick={() => go("home")}
-            className="font-semibold text-[#405343]"
-          >
-            Home
-          </button>
+  <nav className="hidden xl:flex items-center">
+    <button
+      onClick={() => go("home")}
+      className="font-semibold text-[#405343]"
+    >
+      Home
+    </button>
+  </nav>
 
-          <button
-            onClick={() => go("eligibility")}
-            className="font-semibold text-[#405343]"
-          >
-            Eligibility Check
-          </button>
+  {/* User */}
+  <div className="flex items-center gap-3">
 
-          <button
-            onClick={() => go("schemes")}
-            className="font-semibold text-[#405343]"
-          >
-            Schemes
-          </button>
+    <div className="hidden sm:block text-right">
+      <p className="text-sm font-bold text-[#303b33]">
+        {loggedInUser}
+      </p>
 
-          <button
-            onClick={() => go("guidance")}
-            className="font-semibold text-[#405343]"
-          >
-            AI Advisor
-          </button>
+      <p className="text-xs text-[#7d847d]">
+        Citizen
+      </p>
+    </div>
 
-          <button
-            onClick={() => go("guidance")}
-            className="font-semibold text-[#405343]"
-          >
-            My Applications
-          </button>
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5ebe1] text-xl">
+      ♙
+    </div>
 
-        </nav>
+    <button
+      onClick={onLogout}
+      className="hidden sm:block rounded-xl border border-[#cfd5cb] px-3 py-2 text-sm font-semibold text-[#526254]"
+    >
+      Logout
+    </button>
+    </div>
+  </div>
 
-        {/* User */}
-        <div className="flex items-center gap-3">
-
-          <div className="hidden sm:block text-right">
-            <p className="text-sm font-bold text-[#303b33]">
-              {loggedInUser}
-            </p>
-
-            <p className="text-xs text-[#7d847d]">
-              Citizen
-            </p>
-          </div>
-
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5ebe1] text-xl">
-            ♙
-          </div>
-
-          <button
-            onClick={onLogout}
-            className="hidden sm:block rounded-xl border border-[#cfd5cb] px-3 py-2 text-sm font-semibold text-[#526254]"
-          >
-            Logout
-          </button>
-
-        </div>
-
-      </div>
+</div>
 
     </header>
   );
 }
 
-  function DashboardShell({
+ function DashboardShell({
   children,
   go,
   loggedInUser,
@@ -848,32 +1647,226 @@ function DashboardCard({ icon, title, value, tone, footer, onClick, children }: 
   );
 }
 
-function SchemeModal({ scheme, onClose, onGuidance }: { scheme: Scheme; onClose: () => void; onGuidance: () => void }) {
+function SchemeModal({
+  scheme,
+  onClose,
+  onGuidance,
+}: {
+  scheme: Scheme;
+  onClose: () => void;
+  onGuidance: () => void;
+}) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-5" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-3xl bg-[#fbfaf6] p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-5"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-[#fbfaf6] p-7 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+
+        {/* Header */}
         <div className="flex items-start justify-between gap-4">
-          <div><span className="rounded-full bg-[#eaf1e7] px-3 py-1 text-xs font-bold text-[#55745c]">{scheme.category}</span><h2 className="mt-3 text-2xl font-extrabold">{scheme.name}</h2></div>
-          <button onClick={onClose} className="text-2xl text-[#7b837b]">×</button>
+
+          <div>
+            <span className="rounded-full bg-[#eaf1e7] px-3 py-1 text-xs font-bold text-[#55745c]">
+              {scheme.category}
+            </span>
+
+            <h2 className="mt-3 text-2xl font-extrabold">
+              {scheme.name}
+            </h2>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-2xl text-[#7b837b]"
+          >
+            ×
+          </button>
+
         </div>
-        <p className="mt-4 leading-7 text-[#707870]">{scheme.description}</p>
-        <div className="mt-5 rounded-2xl bg-[#eef3eb] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#6e786e]">Why it may be relevant</p><p className="mt-2 text-sm leading-6">{scheme.reason}</p></div>
-        <div className="mt-4 rounded-2xl bg-[#f0ede4] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#7b8177]">Potential benefit</p><p className="mt-2 font-semibold">{scheme.benefit}</p></div>
-        <div className="mt-6 flex flex-wrap gap-3"><button onClick={onGuidance} className="rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white">Application Guidance →</button><button onClick={onClose} className="rounded-xl border border-[#cfd5cb] px-5 py-3 font-semibold">Close</button></div>
+
+        {/* Description */}
+        <div className="mt-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">
+            About the Scheme
+          </p>
+
+          <p className="mt-2 leading-7 text-[#707870]">
+            {scheme.description}
+          </p>
+        </div>
+
+        {/* Why relevant */}
+        <div className="mt-5 rounded-2xl bg-[#eef3eb] p-4">
+
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6e786e]">
+            Why it may be relevant
+          </p>
+
+          <p className="mt-2 text-sm leading-6">
+            {scheme.reason}
+          </p>
+
+        </div>
+
+        {/* Benefit */}
+        <div className="mt-4 rounded-2xl bg-[#f0ede4] p-4">
+
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7b8177]">
+            Potential Benefit
+          </p>
+
+          <p className="mt-2 font-semibold">
+            {scheme.benefit}
+          </p>
+
+        </div>
+
+        {/* Documents */}
+        <div className="mt-5">
+
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">
+            Required Documents
+          </p>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+
+            {(scheme.documents || []).map((document) => (
+              <div
+                key={document}
+                className="rounded-xl border border-[#dfe3dc] bg-white px-4 py-3 text-sm"
+              >
+                <span className="mr-2 text-[#55745c]">
+                  ✓
+                </span>
+
+                {document}
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* How to apply */}
+        <div className="mt-6">
+
+          <p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">
+            How to Apply
+          </p>
+
+          <div className="mt-3 space-y-3">
+
+            {[
+              "Check the eligibility conditions.",
+              "Keep the required documents ready.",
+              "Apply through the appropriate official channel.",
+              "Track your application status after submission.",
+            ].map((step, index) => (
+              <div
+                key={step}
+                className="flex items-center gap-3"
+              >
+
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#55745c] text-sm font-bold text-white">
+                  {index + 1}
+                </div>
+
+                <p className="text-sm text-[#596259]">
+                  {step}
+                </p>
+
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-7 flex flex-wrap gap-3">
+
+          <button
+            onClick={onGuidance}
+            className="rounded-xl bg-[#55745c] px-5 py-3 font-bold text-white hover:bg-[#48654f]"
+          >
+            Application Guidance →
+          </button>
+
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-[#cfd5cb] bg-white px-5 py-3 font-semibold"
+          >
+            Close
+          </button>
+
+        </div>
+
       </div>
     </div>
   );
 }
 
-function SchemeResultCard({ scheme, onGuidance }: { scheme: Scheme; onGuidance: () => void }) {
+function SchemeResultCard({
+  scheme,
+  onGuidance,
+  onApply,
+}: {
+  scheme: Scheme;
+  onGuidance: () => void;
+  onApply: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-[#dfe3dc] bg-white p-6">
-      <span className="rounded-full bg-[#edf3e9] px-3 py-1 text-xs font-bold text-[#55745c]">{scheme.category}</span>
-      <h3 className="mt-4 text-xl font-extrabold">{scheme.name}</h3>
-      <p className="mt-2 text-sm leading-6 text-[#747c74]">{scheme.description}</p>
-      <div className="mt-4 rounded-xl bg-[#f2f4ef] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">Why it appeared</p><p className="mt-1 text-sm">{scheme.reason}</p></div>
-      <p className="mt-4 text-sm"><b>Possible benefit:</b> {scheme.benefit}</p>
-      <button onClick={onGuidance} className="mt-5 rounded-xl border border-[#bfcabd] bg-[#f7f9f5] px-4 py-2.5 text-sm font-bold text-[#55745c]">View Application Guidance →</button>
+
+      <span className="rounded-full bg-[#edf3e9] px-3 py-1 text-xs font-bold text-[#55745c]">
+        {scheme.category}
+      </span>
+
+      <h3 className="mt-4 text-xl font-extrabold">
+        {scheme.name}
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-[#747c74]">
+        {scheme.description}
+      </p>
+
+      <div className="mt-4 rounded-xl bg-[#f2f4ef] p-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#7b837b]">
+          Why it appeared
+        </p>
+
+        <p className="mt-1 text-sm">
+          {scheme.reason}
+        </p>
+      </div>
+
+      <p className="mt-4 text-sm">
+        <b>Possible benefit:</b> {scheme.benefit}
+      </p>
+
+      {/* Buttons */}
+      <div className="mt-5 flex flex-wrap gap-3">
+
+        <button
+          onClick={onGuidance}
+          className="rounded-xl border border-[#bfcabd] bg-[#f7f9f5] px-4 py-2.5 text-sm font-bold text-[#55745c]"
+        >
+          View Application Guidance →
+        </button>
+
+        <button
+          onClick={onApply}
+          className="rounded-xl bg-[#55745c] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#45634c]"
+        >
+          Apply Now
+        </button>
+
+      </div>
+
     </div>
   );
 }
