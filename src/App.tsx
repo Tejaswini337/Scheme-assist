@@ -152,7 +152,7 @@ const [aiLoading, setAiLoading] = useState(false);
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
+        `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
           loggedInEmail
         )}`
       );
