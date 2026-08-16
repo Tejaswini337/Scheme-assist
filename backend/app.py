@@ -6,7 +6,7 @@ from google import genai
 import os
 from dotenv import load_dotenv
 load_dotenv()
-
+mongo_uri = os.environ.get("MONGODB_URI")
 app = Flask(__name__)
 
 gemini_client = genai.Client(
@@ -14,10 +14,14 @@ gemini_client = genai.Client(
 )
 CORS(app)
 # MongoDB connection
-client = MongoClient("mongodb://localhost:27017/")
-
+client = MongoClient("mongodb+srv://pedasingutejaswani_db_user:aHPX7VrA7JMPOmcJ@cluster0.he2nzgo.mongodb.net/?appName=Cluster0")
 # Database
 db = client["scheme_assist"]
+try:
+    client.admin.command("ping")
+    print("✅ MongoDB Atlas connected successfully!")
+except Exception as e:
+    print("❌ MongoDB Atlas connection failed:", e)
 
 @app.route("/")
 def home():
