@@ -347,6 +347,7 @@ const handleAIChat = async (
   }
   try {
     const profileToSave = {
+  email: loggedInEmail,
   fullName: formData.fullName,
 
   age: formData.age,
@@ -383,7 +384,7 @@ const handleAIChat = async (
 };
 console.log("Logged in email:", loggedInEmail);
 const profileResponse = await fetch(
-  "http://127.0.0.1:5000/api/profile",
+  "https://scheme-assist-d15d.onrender.com/api/profile",
   {
     method: "POST",
     headers: {
@@ -403,49 +404,51 @@ if (!profileResponse.ok) {
   alert(profileData.message || "Unable to save profile.");
   return;
 }
-    const response = await fetch(
-      "http://127.0.0.1:5000/api/eligibility/check",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-  fullName: formData.fullName,
-  age: formData.age,
-  gender: formData.gender,
-  maritalStatus: formData.maritalStatus,
+   const response = await fetch(
+  "https://scheme-assist-d15d.onrender.com/api/eligibility/check",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: loggedInEmail,
 
-  aadhaarAvailable: formData.aadhaarAvailable,
-  casteCertificate: formData.casteCertificate,
-  category: formData.category,
+      fullName: formData.fullName,
+      age: formData.age,
+      gender: formData.gender,
+      maritalStatus: formData.maritalStatus,
 
-  disability: formData.disability,
-  disabilityCertificate: formData.disabilityCertificate,
+      aadhaarAvailable: formData.aadhaarAvailable,
+      casteCertificate: formData.casteCertificate,
+      category: formData.category,
 
-  state: formData.state,
-  district: formData.district,
-  town: formData.town,
-  pincode: formData.pincode,
-  ruralUrban: formData.ruralUrban,
+      disability: formData.disability,
+      disabilityCertificate: formData.disabilityCertificate,
 
-  annualIncome: formData.annualIncome,
-  occupation: formData.occupation,
-  employmentStatus: formData.employmentStatus,
+      state: formData.state,
+      district: formData.district,
+      town: formData.town,
+      pincode: formData.pincode,
+      ruralUrban: formData.ruralUrban,
 
-  familySize: formData.familySize,
-  bplStatus: formData.bplStatus,
+      annualIncome: formData.annualIncome,
+      occupation: formData.occupation,
+      employmentStatus: formData.employmentStatus,
 
-  houseOwnership: formData.houseOwnership,
-  studentStatus: formData.studentStatus,
-  seniorCitizen: formData.seniorCitizen,
-  widowSingleParent: formData.widowSingleParent,
+      familySize: formData.familySize,
+      bplStatus: formData.bplStatus,
 
-  incomeCertificate: formData.incomeCertificate,
-  residenceCertificate: formData.residenceCertificate,
-}),
-      }
-    );
+      houseOwnership: formData.houseOwnership,
+      studentStatus: formData.studentStatus,
+      seniorCitizen: formData.seniorCitizen,
+      widowSingleParent: formData.widowSingleParent,
+
+      incomeCertificate: formData.incomeCertificate,
+      residenceCertificate: formData.residenceCertificate,
+    }),
+  }
+);
 
     const data = await response.json();
 
