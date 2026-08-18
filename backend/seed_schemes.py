@@ -21,7 +21,8 @@ schemes = [
             "Caste Certificate",
             "Student ID"
         ],
-        "benefit": "Education financial assistance"
+        "benefit": "Education financial assistance",
+        "officialWebsite": "https://scholarships.gov.in/"
     },
 
     {
@@ -37,7 +38,8 @@ schemes = [
             "Income Certificate",
             "Residence Certificate"
         ],
-        "benefit": "Housing assistance"
+        "benefit": "Housing assistance",
+        "officialWebsite": "https://pmay-urban.gov.in/"
     },
 
     {
@@ -54,7 +56,8 @@ schemes = [
             "Income Certificate",
             "Bank Account Details"
         ],
-        "benefit": "Employment and livelihood support"
+        "benefit": "Employment and livelihood support",
+        "officialWebsite": "https://www.spniwcd.wcd.gov.in/"
     },
 
     {
@@ -70,7 +73,8 @@ schemes = [
             "Age Proof",
             "Income Certificate"
         ],
-        "benefit": "Senior citizen financial assistance"
+        "benefit": "Senior citizen financial assistance",
+        "officialWebsite": "https://nsap.nic.in/"
     },
 
     {
@@ -87,7 +91,8 @@ schemes = [
             "Income Certificate",
             "Residence Certificate"
         ],
-        "benefit": "Livelihood assistance"
+        "benefit": "Livelihood assistance",
+        "officialWebsite": "https://nrlm.gov.in/"
     }
 
 ]

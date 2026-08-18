@@ -1,6 +1,10 @@
+import os
+from dotenv import load_dotenv
 from pymongo import MongoClient
 
-client = MongoClient("mongodb://localhost:27017/")
+load_dotenv()
+
+client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["scheme_assist"]
 
 schemes = [
@@ -21,7 +25,8 @@ schemes = [
         "Bank account details"
     ],
     "benefit": "₹6,000 per year in three installments",
-    "officialSource": "Government of India"
+    "officialSource": "Government of India",
+    "officialWebsite": "https://pmkisan.gov.in/"
 },
     {
         "name": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
@@ -41,7 +46,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Financial support of ₹6,000 per year, subject to scheme conditions",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialWebsite": "https://pmkisan.gov.in/"
     },
 
     {
@@ -62,7 +68,8 @@ schemes = [
             "Crop Details"
         ],
         "benefit": "Crop insurance coverage against eligible risks",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialWebsite": "https://pmfby.gov.in/"
     },
 
     {
@@ -82,7 +89,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Agricultural credit facility",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialWebsite": "https://www.myscheme.gov.in/"
     },
 
     {
@@ -100,7 +108,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Support related to irrigation and water-use efficiency",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialWebsite": "https://pmksy.gov.in/"
     },
 
     {

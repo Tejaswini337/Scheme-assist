@@ -1,4 +1,5 @@
 import { useEffect,useState, type ReactNode } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 type AppStage =
   | "landing"
@@ -295,6 +296,8 @@ const [aiLoading, setAiLoading] = useState(false);
     alert("Registration successful!");
 
     setLoggedInUser(registerName);
+    setLoggedInEmail(registerEmail);
+    localStorage.setItem("loggedInEmail",registerEmail);
 
     // Clear registration fields
     setRegisterName("");
@@ -562,7 +565,6 @@ const handleApplyScheme = async (scheme: any) => {
     go("auth");
     return;
   }
-
   try {
     const response = await fetch(
       "https://scheme-assist-d15d.onrender.com/api/applications",
@@ -585,7 +587,9 @@ const handleApplyScheme = async (scheme: any) => {
       return;
     }
 
-    alert("Application saved successfully!");
+if (scheme.officialWebsite) {
+  window.open(scheme.officialWebsite, "_blank");
+}
 
   } catch (error) {
     console.error("Application error:", error);
@@ -2017,14 +2021,67 @@ function SchemeResultCard({
     </div>
   );
 }
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  maxLength?: number;
+}) {
+  const [showPassword, setShowPassword] = useState(false);
 
+  const inputType =
+    type === "password"
+      ? showPassword
+        ? "text"
+        : "password"
+      : type;
+
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#444d45]">
+        {label}
+      </label>
+
+      <div className="relative">
+        <input
+          type={inputType}
+          value={value}
+          maxLength={maxLength}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-[#d4dad2] bg-[#fcfdfb] px-4 py-3 pr-12 text-sm outline-none focus:border-[#7c927e] focus:ring-2 focus:ring-[#7c927e]/20"
+        />
+
+        {type === "password" && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6f786f] hover:text-[#55745c]"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return <section className="rounded-3xl border border-[#dfe3dc] bg-white p-6 md:p-8"><h2 className="text-xl font-extrabold">{title}</h2><div className="mt-6 grid gap-5 md:grid-cols-2">{children}</div></section>;
 }
 
-function Field({ label, value, onChange, placeholder, type = "text", maxLength }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; maxLength?: number }) {
+/* function Field({ label, value, onChange, placeholder, type = "text", maxLength }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; maxLength?: number }) {
   return <div><label className="mb-2 block text-sm font-semibold text-[#444d45]">{label}</label><input type={type} value={value} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-xl border border-[#d4dad2] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#7c927e] focus:ring-2 focus:ring-[#7c927e]/20" /></div>;
-}
+} */
+
 
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
   return <div><label className="mb-2 block text-sm font-semibold text-[#444d45]">{label}</label><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-xl border border-[#d4dad2] bg-[#fcfdfb] px-4 py-3 text-sm outline-none focus:border-[#7c927e] focus:ring-2 focus:ring-[#7c927e]/20"><option value="">Select an option</option>{options.map((x) => <option key={x}>{x}</option>)}</select></div>;
