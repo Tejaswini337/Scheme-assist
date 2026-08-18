@@ -48,6 +48,9 @@ type Scheme = {
   reason: string;
   missedReason?: string;
   documents?: string[];
+    aiScore?: number;
+  aiExplanation?: string;
+  priorityScore?: number;
 };
 
 const initialForm: FormData = {
@@ -187,12 +190,18 @@ const [aiLoading, setAiLoading] = useState(false);
 
     try {
       const response = await fetch(
-        `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+        `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
           loggedInEmail
         )}`
       );
 
       const data = await response.json();
+      if (!response.ok) {
+  alert(data.message || "Eligibility check failed.");
+  return;
+}
+
+setMatchedSchemes(data.eligibleSchemes || []);
 
       if (response.ok) {
         setApplications(data.applications || []);
@@ -217,7 +226,7 @@ const [aiLoading, setAiLoading] = useState(false);
   }
 
   try {
-    const response = await fetch("https://scheme-assist-d15d.onrender.com/api/login", {
+    const response = await fetch("http://127.0.0.1:5000/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -273,7 +282,7 @@ const [aiLoading, setAiLoading] = useState(false);
   }
 
   try {
-    const response = await fetch("https://scheme-assist-d15d.onrender.com/api/register", {
+    const response = await fetch("http://127.0.0.1:5000/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -330,7 +339,7 @@ const handleAIChat = async (
 
   try {
     const response = await fetch(
-      "https://scheme-assist-d15d.onrender.com/api/ai/chat",
+      "http://127.0.0.1:5000/api/ai/chat",
       {
         method: "POST",
         headers: {
@@ -421,7 +430,7 @@ const handleAIChat = async (
 };
 console.log("Logged in email:", loggedInEmail);
 const profileResponse = await fetch(
-  "https://scheme-assist-d15d.onrender.com/api/profile",
+  "http://127.0.0.1:5000/api/profile",
   {
     method: "POST",
     headers: {
@@ -442,7 +451,7 @@ if (!profileResponse.ok) {
   return;
 }
    const response = await fetch(
-  "https://scheme-assist-d15d.onrender.com/api/eligibility/check",
+  "http://127.0.0.1:5000/api/eligibility/check",
   {
     method: "POST",
     headers: {
@@ -514,7 +523,7 @@ let appliedSchemeNames: string[] = [];
 if (loggedInEmail) {
   try {
     const applicationResponse = await fetch(
-      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
@@ -565,7 +574,7 @@ const handleApplyScheme = async (scheme: any) => {
 
   try {
     const response = await fetch(
-      "https://scheme-assist-d15d.onrender.com/api/applications",
+      "http://127.0.0.1:5000/api/applications",
       {
         method: "POST",
         headers: {
@@ -606,7 +615,7 @@ const handleOpenApplications = async () => {
 
   try {
     const response = await fetch(
-      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+      `http://127.0.0.1:5000/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
@@ -1238,6 +1247,22 @@ const handleOpenApplications = async () => {
           <p className="mt-3 text-sm text-[#665f50]">
             {scheme.reason}
           </p>
+          <div className="mt-4 rounded-xl border border-[#ead5d5] bg-[#fff7f7] p-4">
+  <div className="flex items-center justify-between">
+    <p className="text-xs font-bold uppercase tracking-wider text-[#9a5a5a]">
+      🤖 AI Priority
+    </p>
+
+    <span className="text-lg font-extrabold text-[#9a5a5a]">
+      {scheme.priorityScore ?? 0}%
+    </span>
+  </div>
+
+  <p className="mt-2 text-sm leading-6 text-[#5f5555]">
+    {scheme.aiExplanation ||
+      "This benefit may be relevant to your profile."}
+  </p>
+</div>
 
           <p className="mt-3 font-semibold text-[#55745c]">
             Review benefit →
@@ -1872,6 +1897,7 @@ function SchemeModal({
 
         </div>
 
+
         {/* Documents */}
         <div className="mt-5">
 
@@ -1990,6 +2016,22 @@ function SchemeResultCard({
           {scheme.reason}
         </p>
       </div>
+      <div className="mt-4 rounded-xl border border-[#d8e5d3] bg-[#f6faf4] p-4">
+  <div className="flex items-center justify-between">
+    <p className="text-xs font-bold uppercase tracking-wider text-[#55745c]">
+      🤖 AI Match Score
+    </p>
+
+    <span className="text-lg font-extrabold text-[#55745c]">
+      {scheme.aiScore ?? 0}%
+    </span>
+  </div>
+
+  <p className="mt-2 text-sm leading-6 text-[#4f5a50]">
+    {scheme.aiExplanation ||
+      "This scheme matches your available eligibility information."}
+  </p>
+</div>
 
       <p className="mt-4 text-sm">
         <b>Possible benefit:</b> {scheme.benefit}
