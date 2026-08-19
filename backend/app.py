@@ -28,8 +28,8 @@ gemini_client = genai.Client(
 )
 CORS(app)
 # MongoDB connection
-mongo_uri = os.environ.get("MONGODB_URI")
-client = MongoClient("mongo_uri")
+mongo_uri = os.environ.get("MONGO_ATLAS_URI")
+client = MongoClient(mongo_uri)
 # Database
 db = client["scheme_assist"]
 try:

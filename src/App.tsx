@@ -191,7 +191,7 @@ const [aiLoading, setAiLoading] = useState(false);
 
     try {
       const response = await fetch(
-        `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+        `https://scheme-assist-1.onrender.com/api/applications/${encodeURIComponent(
           loggedInEmail
         )}`
       );
@@ -261,7 +261,7 @@ useEffect(() => {
   }
 
   try {
-    const response = await fetch("https://scheme-assist-d15d.onrender.com/api/login", {
+    const response = await fetch("https://scheme-assist-1.onrender.com/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -317,7 +317,7 @@ useEffect(() => {
   }
 
   try {
-    const response = await fetch("https://scheme-assist-d15d.onrender.com/api/register", {
+    const response = await fetch("https://scheme-assist-1.onrender.com/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -379,7 +379,7 @@ const handleVerifyEmailOTP = async (
 
   try {
     const response = await fetch(
-      "https://scheme-assist-d15d.onrender.com/api/verify-email-otp",
+      "https://scheme-assist-1.onrender.com/api/verify-email-otp",
       {
         method: "POST",
         headers: {
@@ -434,7 +434,7 @@ const handleAIChat = async (
 
   try {
     const response = await fetch(
-      "https://scheme-assist-d15d.onrender.com/api/ai/chat",
+      "https://scheme-assist-1.onrender.com/api/ai/chat",
       {
         method: "POST",
         headers: {
@@ -525,7 +525,7 @@ const handleAIChat = async (
 };
 console.log("Logged in email:", loggedInEmail);
 const profileResponse = await fetch(
-  "https://scheme-assist-d15d.onrender.com/api/profile",
+  "https://scheme-assist-1.onrender.com/api/profile",
   {
     method: "POST",
     headers: {
@@ -546,7 +546,7 @@ if (!profileResponse.ok) {
   return;
 }
    const response = await fetch(
-  "https://scheme-assist-d15d.onrender.com/api/eligibility/check",
+  "https://scheme-assist-1.onrender.com/api/eligibility/check",
   {
     method: "POST",
     headers: {
@@ -618,7 +618,7 @@ let appliedSchemeNames: string[] = [];
 if (loggedInEmail) {
   try {
     const applicationResponse = await fetch(
-      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+      `https://scheme-assist-1.onrender.com/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
@@ -668,7 +668,7 @@ const handleApplyScheme = async (scheme: any) => {
   }
   try {
     const response = await fetch(
-      "https://scheme-assist-d15d.onrender.com/api/applications",
+      "https://scheme-assist-1.onrender.com/api/applications",
       {
         method: "POST",
         headers: {
@@ -711,7 +711,7 @@ const handleOpenApplications = async () => {
 
   try {
     const response = await fetch(
-      `https://scheme-assist-d15d.onrender.com/api/applications/${encodeURIComponent(
+      `https://scheme-assist-1.onrender.com/api/applications/${encodeURIComponent(
         loggedInEmail
       )}`
     );
