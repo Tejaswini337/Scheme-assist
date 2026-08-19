@@ -160,6 +160,9 @@ const [aiLoading, setAiLoading] = useState(false);
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
+  const [showEmailOTP, setShowEmailOTP] = useState(false);
+  const [emailOTP, setEmailOTP] = useState("");
+  const [otpEmail, setOtpEmail] = useState("");
   const [selectedScheme, setSelectedScheme] = useState<Scheme | null>(null);
 
   const go = (stage: AppStage) => {
@@ -208,6 +211,46 @@ const [aiLoading, setAiLoading] = useState(false);
 
   loadApplications();
 }, [loggedInEmail]);
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const verified = params.get("verified");
+
+  if (verified === "true") {
+    alert("✅ Email verified successfully! You can now login.");
+    setAuthMode("login");
+    go("auth");
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+
+  if (verified === "already") {
+    alert("Your email is already verified.");
+    setAuthMode("login");
+    go("auth");
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+
+  if (verified === "false") {
+    alert(
+      "Email verification failed or the verification link has expired."
+    );
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+}, []);
 
   const handleLogin = async (e: import("react").FormEvent) => {
   e.preventDefault();
@@ -292,25 +335,83 @@ const [aiLoading, setAiLoading] = useState(false);
       alert(data.message || "Registration failed.");
       return;
     }
+    setOtpEmail(registerEmail);
+setEmailOTP("");
+setShowEmailOTP(true);
 
-    alert("Registration successful!");
+// Clear registration fields
+setRegisterName("");
+setRegisterEmail("");
+setRegisterPassword("");
+setRegisterConfirmPassword("");
 
-    setLoggedInUser(registerName);
-    setLoggedInEmail(registerEmail);
-    localStorage.setItem("loggedInEmail",registerEmail);
+alert(
+  "OTP sent successfully! Please check your email."
+);
 
-    // Clear registration fields
-    setRegisterName("");
-    setRegisterEmail("");
-    setRegisterPassword("");
-    setRegisterConfirmPassword("");
+   alert(
+  "Registration successful! Please check your email and verify your account before logging in."
+);
 
-    // Go to dashboard
-    go("home");
+// Clear registration fields
+setRegisterName("");
+setRegisterEmail("");
+setRegisterPassword("");
+setRegisterConfirmPassword("");
+
+// Go back to login
+setAuthMode("login");
 
   } catch (error) {
     console.error("Registration error:", error);
     alert("Unable to connect to the backend. Please make sure Flask server is running.");
+  }
+};
+const handleVerifyEmailOTP = async (
+  e: import("react").FormEvent
+) => {
+  e.preventDefault();
+
+  if (!emailOTP || emailOTP.length !== 6) {
+    alert("Please enter the 6-digit OTP.");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://scheme-assist-d15d.onrender.com/api/verify-email-otp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: otpEmail,
+          otp: emailOTP,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "OTP verification failed.");
+      return;
+    }
+
+    alert("✅ Email verified successfully! You can now login.");
+
+    setEmailOTP("");
+    setOtpEmail("");
+    setShowEmailOTP(false);
+    setAuthMode("login");
+
+  } catch (error) {
+    console.error("OTP verification error:", error);
+
+    alert(
+      "Unable to connect to the backend. Please make sure Flask server is running."
+    );
   }
 };
   const handleLogout = () => {
@@ -678,22 +779,120 @@ const handleOpenApplications = async () => {
               <button onClick={() => setAuthMode("login")} className={`rounded-lg py-2.5 font-semibold ${authMode === "login" ? "bg-[#fbfaf6] text-[#55745c] shadow-sm" : "text-[#777d74]"}`}>Login</button>
               <button onClick={() => setAuthMode("register")} className={`rounded-lg py-2.5 font-semibold ${authMode === "register" ? "bg-[#fbfaf6] text-[#55745c] shadow-sm" : "text-[#777d74]"}`}>Register</button>
             </div>
+            {showEmailOTP ? (
+    <form
+    onSubmit={handleVerifyEmailOTP}
+    className="space-y-5"
+  >
+    <div className="text-center">
+      <h2 className="text-xl font-bold">
+        Verify Your Email
+      </h2>
 
-            {authMode === "login" ? (
-              <form onSubmit={handleLogin} className="space-y-5">
-                <Field label="Email Address" value={loginEmail} onChange={setLoginEmail} placeholder="Enter your email" type="email" />
-                <Field label="Password" value={loginPassword} onChange={setLoginPassword} placeholder="Enter your password" type="password" />
-                <button className="w-full rounded-xl bg-[#55745c] py-3.5 font-bold text-white hover:bg-[#48654f]">Login</button>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <Field label="Full Name" value={registerName} onChange={setRegisterName} placeholder="Enter your full name" />
-                <Field label="Email Address" value={registerEmail} onChange={setRegisterEmail} placeholder="Enter your email" type="email" />
-                <Field label="Password" value={registerPassword} onChange={setRegisterPassword} placeholder="Create a password" type="password" />
-                <Field label="Confirm Password" value={registerConfirmPassword} onChange={setRegisterConfirmPassword} placeholder="Confirm password" type="password" />
-                <button className="w-full rounded-xl bg-[#55745c] py-3.5 font-bold text-white hover:bg-[#48654f]">Create Account</button>
-              </form>
-            )}
+      <p className="mt-2 text-sm text-[#727b72]">
+        We sent a 6-digit OTP to
+      </p>
+
+      <p className="mt-1 font-semibold text-[#55745c]">
+        {otpEmail}
+      </p>
+    </div>
+
+    <Field
+      label="Enter OTP"
+      value={emailOTP}
+      onChange={(value) =>
+        setEmailOTP(value.replace(/\D/g, "").slice(0, 6))
+      }
+      placeholder="Enter 6-digit OTP"
+      type="text"
+    />
+
+    <button
+      type="submit"
+      className="w-full rounded-xl bg-[#55745c] py-3.5 font-bold text-white hover:bg-[#48654f]"
+    >
+      Verify OTP
+    </button>
+
+    <button
+      type="button"
+      onClick={() => {
+        setShowEmailOTP(false);
+        setEmailOTP("");
+        setOtpEmail("");
+        setAuthMode("register");
+      }}
+      className="w-full text-sm font-semibold text-[#6e776e]"
+    >
+      ← Back to Register
+    </button>
+  </form>
+   ) : authMode === "login" ? (
+    <form onSubmit={handleLogin} className="space-y-5">
+  <Field
+    label="Email Address"
+    value={loginEmail}
+    onChange={setLoginEmail}
+    placeholder="Enter your email"
+    type="email"
+  />
+
+  <Field
+    label="Password"
+    value={loginPassword}
+    onChange={setLoginPassword}
+    placeholder="Enter your password"
+    type="password"
+  />
+
+  <button className="w-full rounded-xl bg-[#55745c] py-3.5 font-bold text-white hover:bg-[#48654f]">
+    Login
+  </button>
+</form>
+
+) : (
+
+<form onSubmit={handleRegister} className="space-y-4">
+  <Field
+    label="Full Name"
+    value={registerName}
+    onChange={setRegisterName}
+    placeholder="Enter your full name"
+  />
+
+  <Field
+    label="Email Address"
+    value={registerEmail}
+    onChange={setRegisterEmail}
+    placeholder="Enter your email"
+    type="email"
+  />
+
+  <Field
+    label="Password"
+    value={registerPassword}
+    onChange={setRegisterPassword}
+    placeholder="Create a password"
+    type="password"
+  />
+
+  <Field
+    label="Confirm Password"
+    value={registerConfirmPassword}
+    onChange={setRegisterConfirmPassword}
+    placeholder="Confirm password"
+    type="password"
+  />
+
+  <button className="w-full rounded-xl bg-[#55745c] py-3.5 font-bold text-white hover:bg-[#48654f]">
+    Create Account
+  </button>
+</form>
+
+)}
+
+            
           </div>
           <button onClick={() => go("landing")} className="mt-5 block w-full text-center text-sm text-[#777d74]">← Back</button>
         </div>

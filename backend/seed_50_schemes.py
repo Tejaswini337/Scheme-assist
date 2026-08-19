@@ -1,15 +1,11 @@
-import os
-from dotenv import load_dotenv
 from pymongo import MongoClient
 
-load_dotenv()
-
-client = MongoClient(os.getenv("MONGODB_URI"))
+client = MongoClient("mongodb://localhost:27017/")
 db = client["scheme_assist"]
 
 schemes = [
     {
-    "name": "PM-KISAN",
+    "name": "PM Kisan Samman Nidhi",
     "category": "Agriculture",
     "description": "...",
     "eligibility": {
@@ -26,7 +22,7 @@ schemes = [
     ],
     "benefit": "₹6,000 per year in three installments",
     "officialSource": "Government of India",
-    "officialWebsite": "https://pmkisan.gov.in/"
+    "officialwebsite": "https://pmkisan.gov.in/"
 },
     {
         "name": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
@@ -47,7 +43,7 @@ schemes = [
         ],
         "benefit": "Financial support of ₹6,000 per year, subject to scheme conditions",
         "officialSource": "Government of India",
-        "officialWebsite": "https://pmkisan.gov.in/"
+        "officialwebsite": "https://pmkisan.gov.in/"
     },
 
     {
@@ -69,7 +65,7 @@ schemes = [
         ],
         "benefit": "Crop insurance coverage against eligible risks",
         "officialSource": "Government of India",
-        "officialWebsite": "https://pmfby.gov.in/"
+        "officialwebsite": "https://pmfby.gov.in/"
     },
 
     {
@@ -90,7 +86,7 @@ schemes = [
         ],
         "benefit": "Agricultural credit facility",
         "officialSource": "Government of India",
-        "officialWebsite": "https://www.myscheme.gov.in/"
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/kcc"
     },
 
     {
@@ -109,7 +105,7 @@ schemes = [
         ],
         "benefit": "Support related to irrigation and water-use efficiency",
         "officialSource": "Government of India",
-        "officialWebsite": "https://pmksy.gov.in/"
+        "officialwebsite": "https://sampada-mofpi.gov.in/"
     },
 
     {
@@ -128,7 +124,8 @@ schemes = [
             "Land Details"
         ],
         "benefit": "Soil health information and nutrient management guidance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/nmmss"
     },
 
     {
@@ -147,7 +144,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Support for eligible solar-energy applications in agriculture",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://scholarships.gov.in/"
     },
 
     {
@@ -166,7 +164,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Access to an electronic agricultural market platform",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.indiascienceandtechnology.gov.in/nurturing-minds/scholarships/school/pre-matric-scholarship-scheme-minorities"
     },
 
     {
@@ -185,7 +184,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Financing support for eligible agricultural infrastructure",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.indiascienceandtechnology.gov.in/nurturing-minds/scholarships/school/post-matric-scholarship-scheme-minorities"
     },
 
     {
@@ -204,7 +204,8 @@ schemes = [
             "Land Records"
         ],
         "benefit": "Support under applicable crop-production interventions",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://socialjustice.gov.in/schemes/27"
     },
 
     {
@@ -223,7 +224,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Support for eligible food-processing infrastructure and supply-chain projects",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://fellowship.tribal.gov.in/"
     },
         {
         "name": "National Means-cum-Merit Scholarship Scheme",
@@ -244,7 +246,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Scholarship assistance for eligible students",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/post-dis"
     },
 
     {
@@ -266,7 +269,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Financial assistance for higher education",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.dosje.gov.in/schemes-and-services/pm-yasasvi/"
     },
 
     {
@@ -288,7 +292,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Pre-matric educational assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": ""
     },
 
     {
@@ -310,7 +315,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Post-matric educational assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://socialjustice.gov.in/schemes/23"
     },
 
     {
@@ -333,7 +339,8 @@ schemes = [
             "Academic Certificate"
         ],
         "benefit": "Financial support for eligible higher education",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmmvy.wcd.gov.in/Home/Contact"
     },
 
     {
@@ -355,7 +362,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Higher education fellowship or scholarship support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.pmuy.gov.in/index.aspx"
     },
 
     {
@@ -377,7 +385,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Educational financial assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmmvy.wcd.gov.in/Home/Contact"
     },
 
     {
@@ -399,7 +408,8 @@ schemes = [
             "Academic Certificate"
         ],
         "benefit": "Educational scholarship support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.nsiindia.gov.in/(S(5f5r2w55mohhxk2tsc3psmvb))/InternalPage.aspx?Id_Pk=89"
     },
 
     {
@@ -420,7 +430,8 @@ schemes = [
             "School ID"
         ],
         "benefit": "Pre-matric educational assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://socialjustice.gov.in/schemes/23"
     },
 
     {
@@ -442,7 +453,8 @@ schemes = [
             "Academic Certificate"
         ],
         "benefit": "Post-matric educational assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://missionshakti.wcd.gov.in/"
     },
         {
         "name": "Pradhan Mantri Ujjwala Yojana (PMUY)",
@@ -462,7 +474,8 @@ schemes = [
             "Other documents as required"
         ],
         "benefit": "LPG connection support for eligible beneficiaries",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://wcdhry.gov.in/schemes-for-women/onestop-centre/"
     },
 
     {
@@ -484,7 +497,8 @@ schemes = [
             "Other documents as required"
         ],
         "benefit": "Maternity benefit through Direct Benefit Transfer",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/whl-181"
     },
 
     {
@@ -504,7 +518,8 @@ schemes = [
             "Guardian KYC Documents"
         ],
         "benefit": "Long-term savings facility for an eligible girl child",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmay-urban.gov.in/"
     },
 
     {
@@ -521,7 +536,8 @@ schemes = [
             "Documents depend on the applicable service or programme"
         ],
         "benefit": "Support for girl-child protection, education and empowerment",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmayg.dord.gov.in/netiayHome/Home.aspx"
     },
 
     {
@@ -541,7 +557,8 @@ schemes = [
             "Other documents as required by the applicable component"
         ],
         "benefit": "Women safety, security and empowerment support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://ejalshakti.gov.in/JJM/Login.aspx?Ty=se"
     },
 
     {
@@ -560,7 +577,8 @@ schemes = [
             "Other documents as required"
         ],
         "benefit": "Integrated support and assistance services for women affected by violence",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://sbm.gov.in/sbm_dbt/secure/login.aspx"
     },
 
     {
@@ -577,7 +595,8 @@ schemes = [
             "Identity information where required"
         ],
         "benefit": "Information, support and referral assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://swachhbharatmission.ddws.gov.in/"
     },
         {
         "name": "Pradhan Mantri Awas Yojana - Urban 2.0",
@@ -599,7 +618,8 @@ schemes = [
             "Property or Housing Documents where applicable"
         ],
         "benefit": "Housing assistance under applicable PMAY-U 2.0 component",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://sbmurban.org/"
     },
 
     {
@@ -620,7 +640,8 @@ schemes = [
             "Household/Beneficiary Records"
         ],
         "benefit": "Rural housing assistance",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmsuryaghar.gov.in/"
     },
 
     {
@@ -640,7 +661,8 @@ schemes = [
             "Identity Proof where required"
         ],
         "benefit": "Access to functional household tap water supply",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://ejalshakti.gov.in/IMISReports/NRDWP_MIS_NationalRuralDrinkingWaterProgramme.htm"
     },
 
     {
@@ -659,7 +681,8 @@ schemes = [
             "Household Details"
         ],
         "benefit": "Support for eligible rural sanitation interventions",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.mudra.org.in/"
     },
 
     {
@@ -678,7 +701,8 @@ schemes = [
             "Household Details where applicable"
         ],
         "benefit": "Support through applicable urban sanitation services",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.jansamarth.in/prime-minister-svanidhi-scheme"
     },
 
     {
@@ -698,7 +722,8 @@ schemes = [
             "Address Proof"
         ],
         "benefit": "Support/subsidy for eligible residential rooftop solar installations",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmvishwakarma.gov.in/"
     },
 
     {
@@ -717,7 +742,8 @@ schemes = [
             "Identity Proof where required"
         ],
         "benefit": "Support for rural drinking-water access",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://xn--o1bna6ezc1cxc.xn--11b7cb3a6a.xn--h2brj9c/offerings/schemes-and-services/details/pradhan-mantri-kaushal-vikas-yojana-4-0-pmkvy-4-0-2021-ITO3ATMtQWa"
     },
         {
         "name": "Pradhan Mantri Mudra Yojana",
@@ -737,7 +763,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "MUDRA loan support for eligible micro and small business activities",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmegp.msme.gov.in/"
     },
 
     {
@@ -758,7 +785,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Working-capital credit support for eligible street vendors",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/sui"
     },
 
     {
@@ -779,7 +807,8 @@ schemes = [
             "Trade/Occupation Details"
         ],
         "benefit": "Training, toolkit and credit-related support under applicable scheme components",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://nats.education.gov.in/"
     },
 
     {
@@ -798,7 +827,8 @@ schemes = [
             "Educational Certificate where applicable"
         ],
         "benefit": "Skill training, assessment and certification support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/hi/schemes/ddugku"
     },
 
     {
@@ -820,7 +850,8 @@ schemes = [
             "Educational Certificate where applicable"
         ],
         "benefit": "Credit-linked subsidy support for eligible new micro enterprises",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://nirdpr.org.in/rseti/"
     },
 
     {
@@ -842,7 +873,8 @@ schemes = [
             "Bank Documents"
         ],
         "benefit": "Bank loan support for eligible greenfield enterprises",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://pmjdy.gov.in/"
     },
 
     {
@@ -862,7 +894,8 @@ schemes = [
             "Founder Details"
         ],
         "benefit": "Startup recognition and access to applicable government support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/pmjjby"
     },
 
     {
@@ -882,7 +915,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Support for apprenticeship training and employability",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://jansuraksha.in/pmsbyScheme"
     },
 
     {
@@ -903,7 +937,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Skill training and employment-oriented support",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.npscra.proteantech.in/scheme-details.php"
     },
 
     {
@@ -924,7 +959,8 @@ schemes = [
             "Educational Certificate where applicable"
         ],
         "benefit": "Entrepreneurship and self-employment training",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://maandhan.in/"
     },
         {
         "name": "Pradhan Mantri Jan Dhan Yojana",
@@ -941,7 +977,8 @@ schemes = [
             "Address Proof"
         ],
         "benefit": "Access to basic banking and financial inclusion services",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://csc.gov.in/pmkmy"
     },
 
     {
@@ -960,7 +997,8 @@ schemes = [
             "Consent/Auto-debit Authorization"
         ],
         "benefit": "Life insurance coverage under the scheme",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://web.umang.gov.in/landing/department/national-social-assistance-programme-nsap.html"
     },
 
     {
@@ -979,7 +1017,8 @@ schemes = [
             "Consent/Auto-debit Authorization"
         ],
         "benefit": "Accident insurance coverage under the scheme",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.myscheme.gov.in/schemes/nfbs"
     },
 
     {
@@ -998,7 +1037,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Pension support after meeting applicable scheme conditions",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://janaushadhi.gov.in/"
     },
 
     {
@@ -1019,7 +1059,8 @@ schemes = [
             "Identity Proof"
         ],
         "benefit": "Pension support for eligible unorganised workers",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://janaushadhi.gov.in/"
     },
 
     {
@@ -1040,7 +1081,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Pension support for eligible farmers",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://study.com/learn/student-support-teaching.html"
     },
 
     {
@@ -1060,7 +1102,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Social assistance under applicable NSAP components",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://housing.ap.gov.in/"
     },
 
     {
@@ -1081,7 +1124,8 @@ schemes = [
             "Bank Account Details"
         ],
         "benefit": "Financial assistance to eligible families",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.india.gov.in/category/benefits-social-development/subcategory/women-children/details/support-to-training-and-employment-programme-for-women"
     },
 
     {
@@ -1100,7 +1144,8 @@ schemes = [
             "Other documents as required"
         ],
         "benefit": "Cashless healthcare coverage for eligible beneficiaries under PM-JAY",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://www.helpinghandindiango.org/?gad_source=1&gad_campaignid=737593438&gbraid=0AAAAADNtTMu8ptyI8GNprnfPQC-e4VfpB&gclid=CjwKCAjwhZDUBhBGEiwAbi5bjqCoECduzBo0xa0MynvX2hNVvLh1fy3X3G9hQME0zX6Icj0Gmul02xoCFDkQAvD_BwE"
     },
 
     {
@@ -1117,7 +1162,8 @@ schemes = [
             "Identity Proof where required"
         ],
         "benefit": "Access to quality generic medicines at affordable prices",
-        "officialSource": "Government of India"
+        "officialSource": "Government of India",
+        "officialwebsite": "https://thecreats.org/rural-education?gad_source=1&gad_campaignid=23070270703&gbraid=0AAAAAqYf243dlNovJ7Ei9gMqqazWR-0uE&gclid=CjwKCAjwhZDUBhBGEiwAbi5bjuYybm1CgPVFh7KGLEB9jg5JUwMQe7KSXkUU7gLI_2jIrdWG10OKsBoC1acQAvD_BwE"
     },
 ]
 
