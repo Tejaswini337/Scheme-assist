@@ -9,7 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
-mongo_uri = os.environ.get("MONGODB_URI")
+mongo_uri = os.environ.get("MONGO_ATLAS_URI")
 app = Flask(__name__)
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
