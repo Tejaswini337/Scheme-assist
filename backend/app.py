@@ -4,20 +4,14 @@ from flask_cors import CORS
 from services.eligibility_engine import check_scheme_eligibility
 from google import genai
 import os
-from flask_mail import Mail, Message
+import requests
 from itsdangerous import URLSafeTimedSerializer
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 mongo_uri = os.environ.get("MONGO_ATLAS_URI")
 app = Flask(__name__)
-app.config["MAIL_SERVER"] = "smtp.gmail.com"
-app.config["MAIL_PORT"] = 587
-app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
-app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-
-mail = Mail(app)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
 
 serializer = URLSafeTimedSerializer(
     os.environ.get("SECRET_KEY")
@@ -61,7 +55,6 @@ def test_db():
         }), 500
 # 
 from werkzeug.security import generate_password_hash, check_password_hash
-
 
 @app.route("/api/register", methods=["POST"])
 def register():
@@ -111,15 +104,18 @@ def register():
         # Save user
         db.users.insert_one(user)
 
-        # Send OTP email
-        msg = Message(
-            subject="Scheme Assist - Email Verification OTP",
-            sender=os.environ.get("MAIL_USERNAME"),
-            recipients=[email]
-        )
-
-        msg.body = f"""
-Hello {name},
+        # Send OTP using Resend HTTP API
+        resend_response = requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "from": "Scheme Assist <onboarding@resend.dev>",
+                "to": [email],
+                "subject": "Scheme Assist - Email Verification OTP",
+                "text": f"""Hello {name},
 
 Your Scheme Assist email verification OTP is:
 
@@ -132,8 +128,15 @@ Please do not share this OTP with anyone.
 Regards,
 Scheme Assist Team
 """
+            },
+            timeout=15
+        )
 
-        mail.send(msg)
+        if resend_response.status_code >= 400:
+            print("Resend error:", resend_response.text)
+            raise Exception(
+                f"Email sending failed: {resend_response.text}"
+            )
 
         return jsonify({
             "success": True,
