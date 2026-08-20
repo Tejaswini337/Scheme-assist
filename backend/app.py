@@ -1,21 +1,14 @@
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request
 from pymongo import MongoClient
 from flask_cors import CORS
 from services.eligibility_engine import check_scheme_eligibility
 from google import genai
 import os
-import requests
-from itsdangerous import URLSafeTimedSerializer
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 mongo_uri = os.environ.get("MONGO_ATLAS_URI")
 app = Flask(__name__)
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
-
-serializer = URLSafeTimedSerializer(
-    os.environ.get("SECRET_KEY")
-)
 
 gemini_client = genai.Client(
     api_key=os.environ.get("GEMINI_API_KEY")
@@ -23,7 +16,7 @@ gemini_client = genai.Client(
 CORS(app)
 # MongoDB connection
 mongo_uri = os.environ.get("MONGO_ATLAS_URI")
-client = MongoClient(mongo_uri)
+client = MongoClient("mongo_uri")
 # Database
 db = client["scheme_assist"]
 try:
@@ -56,6 +49,7 @@ def test_db():
 # 
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 @app.route("/api/register", methods=["POST"])
 def register():
     try:
@@ -64,6 +58,7 @@ def register():
         name = data.get("name")
         email = data.get("email")
         password = data.get("password")
+        password_hash = generate_password_hash(password)
 
         # Basic validation
         if not name or not email or not password:
@@ -72,7 +67,7 @@ def register():
                 "message": "Name, email and password are required."
             }), 400
 
-        # Check existing user
+        # Check whether user already exists
         existing_user = db.users.find_one({
             "email": email
         })
@@ -86,198 +81,26 @@ def register():
         # Hash password
         password_hash = generate_password_hash(password)
 
-        # Generate 6-digit OTP
-        import random
-        otp = str(random.randint(100000, 999999))
-
-        # Create user
+        # Store user
         user = {
             "name": name,
             "email": email,
-            "password": password_hash,
-            "email_verified": False,
-            "email_otp": otp,
-            "otp_expiry": __import__("datetime").datetime.utcnow()
-            + __import__("datetime").timedelta(minutes=10)
+            "password": password_hash
         }
 
-        # Save user
         db.users.insert_one(user)
-
-        # Send OTP using Resend HTTP API
-        resend_response = requests.post(
-            "https://api.resend.com/emails",
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "from": "Scheme Assist <onboarding@resend.dev>",
-                "to": [email],
-                "subject": "Scheme Assist - Email Verification OTP",
-                "text": f"""Hello {name},
-
-Your Scheme Assist email verification OTP is:
-
-{otp}
-
-This OTP is valid for 10 minutes.
-
-Please do not share this OTP with anyone.
-
-Regards,
-Scheme Assist Team
-"""
-            },
-            timeout=15
-        )
-
-        if resend_response.status_code >= 400:
-            print("Resend error:", resend_response.text)
-            raise Exception(
-                f"Email sending failed: {resend_response.text}"
-            )
 
         return jsonify({
             "success": True,
-            "message": "OTP sent successfully to your email."
+            "message": "Registration successful!"
         }), 201
 
     except Exception as e:
-        print("Registration error:", e)
-
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
-@app.route("/api/verify-email-otp", methods=["POST"])
-def verify_email_otp():
-    try:
-        data = request.get_json()
-
-        email = data.get("email")
-        otp = data.get("otp")
-
-        if not email or not otp:
-            return jsonify({
-                "success": False,
-                "message": "Email and OTP are required."
-            }), 400
-
-        user = db.users.find_one({
-            "email": email
-        })
-
-        if not user:
-            return jsonify({
-                "success": False,
-                "message": "User not found."
-            }), 404
-
-        if user.get("email_verified", False):
-            return jsonify({
-                "success": True,
-                "message": "Email is already verified."
-            }), 200
-
-        # Check OTP expiry
-        from datetime import datetime
-
-        if datetime.utcnow() > user.get("otp_expiry"):
-            return jsonify({
-                "success": False,
-                "message": "OTP has expired. Please register again."
-            }), 400
-
-        # Check OTP
-        if otp != user.get("email_otp"):
-            return jsonify({
-                "success": False,
-                "message": "Invalid OTP."
-            }), 400
-
-        # Mark email verified
-        db.users.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "email_verified": True
-                },
-                "$unset": {
-                    "email_otp": "",
-                    "otp_expiry": ""
-                }
-            }
-        )
-
-        return jsonify({
-            "success": True,
-            "message": "Email verified successfully!"
-        }), 200
-
-    except Exception as e:
-        print("OTP verification error:", e)
-
         return jsonify({
             "success": False,
             "message": str(e)
         }), 500
 
-@app.route("/api/verify-email", methods=["GET"])
-def verify_email():
-    try:
-        token = request.args.get("token")
-
-        if not token:
-            return jsonify({
-                "success": False,
-                "message": "Verification token is missing."
-            }), 400
-
-        # Decode token
-        email = serializer.loads(
-            token,
-            salt="email-verification",
-            max_age=3600
-        )
-
-        # Find user
-        user = db.users.find_one({
-            "email": email
-        })
-
-        if not user:
-            return jsonify({
-                "success": False,
-                "message": "User not found."
-            }), 404
-
-        # Already verified
-        if user.get("email_verified", False):
-            return redirect(
-                "https://scheme-assist-frontend.onrender.com/?verified=already"
-            )
-
-        # Mark email as verified
-        db.users.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "email_verified": True
-                }
-            }
-        )
-
-        return redirect(
-            "https://scheme-assist-frontend.onrender.com/?verified=true"
-        )
-
-    except Exception as e:
-        print("Email verification error:", e)
-
-        return redirect(
-            "https://scheme-assist-frontend.onrender.com/?verified=false"
-        )
 
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -310,11 +133,6 @@ def login():
                 "success": False,
                 "message": "Incorrect password."
             }), 401
-        if not user.get("email_verified", False):
-            return jsonify({
-        "success": False,
-        "message": "Please verify your email before logging in."
-    }), 403
 
         return jsonify({
             "success": True,
